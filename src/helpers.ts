@@ -1,7 +1,34 @@
-import { array_key_first, array_key_last, array_shift, empty, explode, in_array } from '@balboacodes/php-utils';
+import { array_key_first, array_key_last, array_shift, count, empty, explode, in_array } from '@balboacodes/php-utils';
 import { Arr } from './Arr';
 import { Collection } from './Collection';
 import { Stringable } from './Stringable';
+
+/**
+ * Determine if the given value is "blank".
+ */
+export function blank(value: any): boolean {
+    if (value === undefined || value === null) {
+        return true;
+    }
+
+    if (typeof value === 'string') {
+        return value.trim() === '';
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return false;
+    }
+
+    if (Array.isArray(value)) {
+        return count(value) === 0;
+    }
+
+    if (value instanceof Stringable) {
+        return value.toString().trim() === '';
+    }
+
+    return empty(value);
+}
 
 /**
  * Create a collection from the given value.
@@ -200,6 +227,32 @@ export function last<T>(array: T[] | Record<string, T>): any {
 }
 
 /**
+ * Create a new Date instance for the current time.
+ */
+export function now(tz: 'local' | 'utc' = 'local'): Date {
+    const now = new Date();
+
+    if (tz === 'local') {
+        return now;
+    }
+
+    const parsed = Date.parse(now.toUTCString());
+
+    return new Date(parsed);
+}
+
+/**
+ * Catch a potential exception and return a default value.
+ */
+export function rescue<TValue, TFallback>(callback: () => TValue, rescue?: (e: any) => TFallback): TValue | TFallback {
+    try {
+        return callback();
+    } catch (e: any) {
+        return value(rescue, e) as any;
+    }
+}
+
+/**
  * Get a new stringable object from the given string.
  */
 export function str(value?: string): Stringable {
@@ -211,4 +264,17 @@ export function str(value?: string): Stringable {
  */
 export function value<TValue, TArgs extends any[]>(v: TValue | ((...args: TArgs) => TValue), ...args: TArgs): TValue {
     return typeof v === 'function' ? (v as (...args: TArgs) => TValue)(...args) : v;
+}
+
+/**
+ * Return a value if the given condition is true.
+ */
+export function when(condition: any, whenTrue: Function | any, defaultValue?: Function | any): any {
+    condition = typeof condition === 'function' ? condition() : condition;
+
+    if (condition) {
+        return value(whenTrue, condition);
+    }
+
+    return value(defaultValue, condition);
 }

@@ -1,6 +1,25 @@
 import { expect, test } from 'vitest';
-import { data_fill, data_forget, data_get, data_has, data_set, head, last, str, value } from '../src/helpers';
+// prettier-ignore
+import {
+    blank,
+    data_fill, data_forget, data_get, data_has, data_set, head, last, now, rescue, str, value, when,
+} from '../src/helpers';
 import { Stringable } from '../src/Stringable';
+
+test('blank', () => {
+    expect(blank(null)).toEqual(true);
+    expect(blank('')).toEqual(true);
+    expect(blank('  ')).toEqual(true);
+    expect(blank(new Stringable(''))).toEqual(true);
+    expect(blank(new Stringable('  '))).toEqual(true);
+    expect(blank(10)).toEqual(false);
+    expect(blank(true)).toEqual(false);
+    expect(blank(false)).toEqual(false);
+    expect(blank(0)).toEqual(false);
+    expect(blank(0.0)).toEqual(false);
+    expect(blank(new Stringable(' FooBar '))).toEqual(false);
+    expect(blank({})).toEqual(true);
+});
 
 test('data_fill', () => {
     let data: any = { foo: 'bar' };
@@ -319,6 +338,29 @@ test('last', () => {
     expect(last(array)).toBe('c');
 });
 
+test('now', () => {
+    let date = now();
+    expect(date).toBeInstanceOf(Date);
+
+    date.setDate(1);
+    expect(date.getDate()).toEqual(1);
+
+    date = now('utc');
+    expect(date).toBeInstanceOf(Date);
+
+    date.setUTCFullYear(2000);
+    expect(date.getUTCFullYear()).toEqual(2000);
+});
+
+test('rescue', () => {
+    const th = () => {
+        throw new Error();
+    };
+    expect(rescue(() => true)).toEqual(true);
+    expect(rescue(th)).toEqual(undefined);
+    expect(rescue(th, () => 'rescued')).toEqual('rescued');
+});
+
 test('str', () => {
     const string = new Stringable('foo');
 
@@ -333,4 +375,55 @@ test('value', () => {
     expect(value('foo')).toBe('foo');
     expect(value(() => 'foo')).toBe('foo');
     expect(value((arg) => arg, 'foo')).toBe('foo');
+});
+
+test('when', () => {
+    expect(when(true, 'Hello')).toEqual('Hello');
+    expect(when(false, 'Hello')).toEqual(undefined);
+    expect(when(1 === 1, 'There')).toEqual('There'); // strict types
+    // @ts-ignore
+    expect(when(1 == '1', 'There')).toEqual('There'); // loose types
+    // @ts-ignore
+    expect(when(1 == 2, 'There')).toEqual(undefined);
+    expect(when('1', () => null)).toEqual(null);
+    expect(when(0, () => null)).toEqual(undefined);
+    expect(when([1, 2, 3, 4], 'True')).toEqual('True'); // Array
+    expect(when([], 'True')).toEqual('True'); // Empty Array = Truthy
+    expect(when({}, () => 'True')).toEqual('True'); // Object
+    expect(when(false, 'Hello', 'World')).toEqual('World');
+    // @ts-ignore
+    expect(when(1 === 0, 'Hello', 'World')).toEqual('World'); // strict types
+    // @ts-ignore
+    expect(when(1 == '0', 'Hello', 'World')).toEqual('World'); // loose types
+    expect(
+        when(
+            '',
+            () => 'There',
+            () => null,
+        ),
+    ).toEqual(null);
+    expect(
+        when(
+            0,
+            () => 'There',
+            () => null,
+        ),
+    ).toEqual(null);
+    expect(when([], 'True', 'False')).toEqual('True'); // Empty Array = Truthy
+    expect(
+        when(
+            true,
+            (value: true) => value,
+            (value: true) => !value,
+        ),
+    ).toEqual(true); // lazy evaluation
+    expect(
+        when(
+            false,
+            (value: false) => value,
+            (value: false) => !value,
+        ),
+    ).toEqual(true); // lazy evaluation
+    expect(when(() => true, 'Hello')).toEqual('Hello'); // lazy evaluation condition
+    expect(when(() => false, 'Hello', 'World')).toEqual('World'); // lazy evaluation condition
 });
