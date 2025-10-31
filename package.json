@@ -1,15 +1,24 @@
 {
-    "name": "@balboacodes/<package>",
+    "name": "@balboacodes/laravel-helpers",
     "version": "0.1.0",
     "description": "",
-    "keywords": [],
-    "homepage": "https://github.com/balboacodes/<package>#readme",
+    "keywords": [
+        "laravel",
+        "helpers",
+        "strings",
+        "stringable",
+        "arrays",
+        "objects",
+        "collections",
+        "numbers"
+    ],
+    "homepage": "https://github.com/balboacodes/laravel-helpers#readme",
     "bugs": {
-        "url": "https://github.com/balboacodes/<package>/issues"
+        "url": "https://github.com/balboacodes/laravel-helpers/issues"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/balboacodes/<package>.git"
+        "url": "git+https://github.com/balboacodes/laravel-helpers.git"
     },
     "license": "MIT",
     "author": "Balboa Codes",
@@ -38,8 +47,11 @@
     "devDependencies": {
         "prettier": "^3.6.2",
         "typescript": "^5.9.3",
-        "vite": "^7.1.11",
+        "vite": "^7.1.12",
         "vite-plugin-dts": "^4.5.4",
         "vitest": "^3.2.4"
+    },
+    "dependencies": {
+        "@balboacodes/php-utils": "^0.6.0"
     }
 }
