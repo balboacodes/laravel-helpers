@@ -1,8 +1,7 @@
 import { expect, test } from 'vitest';
 // prettier-ignore
 import {
-    blank,
-    data_fill, data_forget, data_get, data_has, data_set, head, last, now, rescue, str, value, when,
+    blank, data_fill, data_forget, data_get, data_has, data_set, e, filled, head, last, now, preg_replace_array, rescue, str, value, when,
 } from '../src/helpers';
 import { Stringable } from '../src/Stringable';
 
@@ -326,6 +325,26 @@ test('data_set', () => {
     });
 });
 
+test('e', () => {
+    const str = "A 'quote' is <b>bold</b>";
+    expect(e(str)).toEqual('A &#039;quote&#039; is &lt;b&gt;bold&lt;/b&gt;');
+});
+
+test('filled', () => {
+    expect(filled(null)).toEqual(false);
+    expect(filled('')).toEqual(false);
+    expect(filled('  ')).toEqual(false);
+    expect(filled(new Stringable(''))).toEqual(false);
+    expect(filled(new Stringable('  '))).toEqual(false);
+    expect(filled(10)).toEqual(true);
+    expect(filled(true)).toEqual(true);
+    expect(filled(false)).toEqual(true);
+    expect(filled(0)).toEqual(true);
+    expect(filled(0.0)).toEqual(true);
+    expect(filled(new Stringable(' FooBar '))).toEqual(true);
+    expect(filled({})).toEqual(false);
+});
+
 test('head', () => {
     const array = ['a', 'b', 'c'];
 
@@ -350,6 +369,28 @@ test('now', () => {
 
     date.setUTCFullYear(2000);
     expect(date.getUTCFullYear()).toEqual(2000);
+});
+
+test.each([
+    [
+        '/:[a-z_]+/',
+        ['8:30', '9:00'],
+        'The event will take place between :start and :end',
+        'The event will take place between 8:30 and 9:00',
+    ],
+    ['/%s/', ['Taylor'], 'Hi, %s', 'Hi, Taylor'],
+    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+    ['/%s/', [], 'Hi, %s %s', 'Hi,  '],
+    ['/%s/', ['a', 'b', 'c'], 'Hi', 'Hi'],
+    ['//', [], '', ''],
+    ['/%s/', ['a'], '', ''],
+    // non-sequential numeric keys → should still consume in natural order
+    ['/%s/', { 2: 'A', 10: 'B' }, '%s %s', 'A B'],
+    // associative keys → order should be insertion order, not keys/pointer
+    ['/%s/', { first: 'A', second: 'B' }, '%s %s', 'A B'],
+    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+])('preg_replace_array(%s, $1, %s) => %s', (pattern, replacements, subject, expectedOutput) => {
+    expect(preg_replace_array(pattern, replacements, subject)).toEqual(expectedOutput);
 });
 
 test('rescue', () => {

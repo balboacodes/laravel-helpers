@@ -1,4 +1,15 @@
-import { array_key_first, array_key_last, array_shift, count, empty, explode, in_array } from '@balboacodes/php-utils';
+import {
+    array_key_first,
+    array_key_last,
+    array_shift,
+    count,
+    empty,
+    ENT_QUOTES,
+    explode,
+    htmlspecialchars,
+    in_array,
+    preg_replace_callback,
+} from '@balboacodes/php-utils';
 import { Arr } from './Arr';
 import { Collection } from './Collection';
 import { Stringable } from './Stringable';
@@ -213,6 +224,20 @@ export function data_set(
 }
 
 /**
+ * Encode HTML special characters in a string.
+ */
+export function e(value: string, doubleEncode = true): string {
+    return htmlspecialchars(value ?? '', ENT_QUOTES, doubleEncode);
+}
+
+/**
+ * Determine if a value is "filled".
+ */
+export function filled(value: any): boolean {
+    return !blank(value);
+}
+
+/**
  * Get the first element of an array. Useful for method chaining.
  */
 export function head<T>(array: T[] | Record<string, T>): any {
@@ -239,6 +264,27 @@ export function now(tz: 'local' | 'utc' = 'local'): Date {
     const parsed = Date.parse(now.toUTCString());
 
     return new Date(parsed);
+}
+
+/**
+ * Replace a given pattern with each value in the array in sequentially.
+ */
+export function preg_replace_array(
+    pattern: string | RegExp,
+    replacements: string[] | Record<string, string>,
+    subject: string,
+): string {
+    return preg_replace_callback(
+        String(pattern),
+        () => {
+            for (const _ of Object.values(replacements)) {
+                return array_shift(replacements);
+            }
+
+            return '';
+        },
+        subject,
+    ) as string;
 }
 
 /**
