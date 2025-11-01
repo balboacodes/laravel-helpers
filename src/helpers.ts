@@ -299,10 +299,121 @@ export function rescue<TValue, TFallback>(callback: () => TValue, rescue?: (e: a
 }
 
 /**
+ * Retry an operation a given number of times.
+ *
+ * @throws {Error} If callback throws.
+ */
+export function retry<TValue>(
+    times: number | number[],
+    callback: (attempts: number) => TValue,
+    sleepMilliseconds: number | ((attempts: number, e: Error) => number) = 0,
+    when?: (e: Error) => boolean,
+): any {
+    let attempts = 0;
+    let backoff: number[] = [];
+
+    if (Array.isArray(times)) {
+        backoff = times;
+        times = count(times) + 1;
+    }
+
+    while (times > 0) {
+        attempts++;
+        (times as number)--;
+
+        try {
+            return callback(attempts);
+        } catch (e: any) {
+            if (times < 1 || (when && !when(e))) {
+                throw e;
+            }
+
+            sleepMilliseconds = backoff[attempts - 1] ?? sleepMilliseconds;
+
+            if (sleepMilliseconds) {
+                const end = Date.now() + value(sleepMilliseconds, attempts, e);
+
+                while (Date.now() < end) {
+                    // sleep
+                }
+            }
+        }
+    }
+}
+
+/**
  * Get a new stringable object from the given string.
  */
 export function str(value?: string): Stringable {
     return new Stringable(value);
+}
+
+/**
+ * Call the given Closure with the given value then return the value.
+ */
+export function tap<TValue>(value: TValue, callback?: (value: TValue) => any): TValue {
+    if (callback === undefined) {
+        return value;
+    }
+
+    callback(value);
+
+    return value;
+}
+
+/**
+ * Throw the given exception if the given condition is true.
+ *
+ * @throws {Error} If condition is true.
+ */
+export function throw_if<TValue, TParams extends any, TExceptionValue extends Error | string>(
+    condition: TValue,
+    exception: ((...params: TParams[]) => TExceptionValue) | TExceptionValue = new Error() as any,
+    ...parameters: TParams[]
+): never | TValue {
+    if (condition) {
+        if (typeof exception === 'function') {
+            exception = exception(...parameters);
+        }
+
+        throw typeof exception === 'string' ? new Error(exception as string) : exception;
+    }
+
+    return condition;
+}
+
+/**
+ * Throw the given exception unless the given condition is true.
+ *
+ * @throws {Error} If condition is true.
+ */
+export function throw_unless<TValue, TParams extends any, TExceptionValue extends Error | string>(
+    condition: TValue,
+    exception: ((params: TParams) => TExceptionValue) | TExceptionValue = new Error() as any,
+    ...parameters: TParams[]
+): never | TValue {
+    throw_if(!condition, exception, ...parameters);
+
+    return condition;
+}
+
+/**
+ * Transform the given value if it is present.
+ */
+export function transform<TValue, TReturn, TDefault>(
+    value: TValue,
+    callback: (value: TValue) => TReturn,
+    defaultValue?: TDefault | ((value: TValue) => TDefault),
+): TDefault | TReturn {
+    if (filled(value)) {
+        return callback(value);
+    }
+
+    if (typeof defaultValue === 'function') {
+        return (defaultValue as Function)(value);
+    }
+
+    return defaultValue as TDefault;
 }
 
 /**
@@ -323,4 +434,13 @@ export function when(condition: any, whenTrue: Function | any, defaultValue?: Fu
     }
 
     return value(defaultValue, condition);
+}
+
+/**
+ * Return the given value, optionally passed through the given callback.
+ *
+ * @alias Laravel's `with()`
+ */
+export function pass<TValue, TReturn>(value: TValue, callback?: (value: TValue) => TReturn): TValue | TReturn {
+    return callback === undefined ? value : callback(value);
 }
