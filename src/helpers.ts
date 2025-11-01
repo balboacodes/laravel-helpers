@@ -1,7 +1,45 @@
-import { array_key_first, array_key_last, array_shift, empty, explode, in_array } from '@balboacodes/php-utils';
+import {
+    array_key_first,
+    array_key_last,
+    array_shift,
+    count,
+    empty,
+    ENT_QUOTES,
+    explode,
+    htmlspecialchars,
+    in_array,
+    preg_replace_callback,
+} from '@balboacodes/php-utils';
 import { Arr } from './Arr';
 import { Collection } from './Collection';
 import { Stringable } from './Stringable';
+
+/**
+ * Determine if the given value is "blank".
+ */
+export function blank(value: any): boolean {
+    if (value === undefined || value === null) {
+        return true;
+    }
+
+    if (typeof value === 'string') {
+        return value.trim() === '';
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return false;
+    }
+
+    if (Array.isArray(value)) {
+        return count(value) === 0;
+    }
+
+    if (value instanceof Stringable) {
+        return value.toString().trim() === '';
+    }
+
+    return empty(value);
+}
 
 /**
  * Create a collection from the given value.
@@ -186,6 +224,20 @@ export function data_set(
 }
 
 /**
+ * Encode HTML special characters in a string.
+ */
+export function e(value: string, doubleEncode = true): string {
+    return htmlspecialchars(value ?? '', ENT_QUOTES, doubleEncode);
+}
+
+/**
+ * Determine if a value is "filled".
+ */
+export function filled(value: any): boolean {
+    return !blank(value);
+}
+
+/**
  * Get the first element of an array. Useful for method chaining.
  */
 export function head<T>(array: T[] | Record<string, T>): any {
@@ -200,6 +252,96 @@ export function last<T>(array: T[] | Record<string, T>): any {
 }
 
 /**
+ * Create a new Date instance for the current time.
+ */
+export function now(tz: 'local' | 'utc' = 'local'): Date {
+    const now = new Date();
+
+    if (tz === 'local') {
+        return now;
+    }
+
+    const parsed = Date.parse(now.toUTCString());
+
+    return new Date(parsed);
+}
+
+/**
+ * Replace a given pattern with each value in the array in sequentially.
+ */
+export function preg_replace_array(
+    pattern: string | RegExp,
+    replacements: string[] | Record<string, string>,
+    subject: string,
+): string {
+    return preg_replace_callback(
+        String(pattern),
+        () => {
+            for (const _ of Object.values(replacements)) {
+                return array_shift(replacements);
+            }
+
+            return '';
+        },
+        subject,
+    ) as string;
+}
+
+/**
+ * Catch a potential exception and return a default value.
+ */
+export function rescue<TValue, TFallback>(callback: () => TValue, rescue?: (e: any) => TFallback): TValue | TFallback {
+    try {
+        return callback();
+    } catch (e: any) {
+        return value(rescue, e) as any;
+    }
+}
+
+/**
+ * Retry an operation a given number of times.
+ *
+ * @throws {Error} If callback throws.
+ */
+export function retry<TValue>(
+    times: number | number[],
+    callback: (attempts: number) => TValue,
+    sleepMilliseconds: number | ((attempts: number, e: Error) => number) = 0,
+    when?: (e: Error) => boolean,
+): any {
+    let attempts = 0;
+    let backoff: number[] = [];
+
+    if (Array.isArray(times)) {
+        backoff = times;
+        times = count(times) + 1;
+    }
+
+    while (times > 0) {
+        attempts++;
+        (times as number)--;
+
+        try {
+            return callback(attempts);
+        } catch (e: any) {
+            if (times < 1 || (when && !when(e))) {
+                throw e;
+            }
+
+            sleepMilliseconds = backoff[attempts - 1] ?? sleepMilliseconds;
+
+            if (sleepMilliseconds) {
+                const end = Date.now() + value(sleepMilliseconds, attempts, e);
+
+                while (Date.now() < end) {
+                    // sleep
+                }
+            }
+        }
+    }
+}
+
+/**
  * Get a new stringable object from the given string.
  */
 export function str(value?: string): Stringable {
@@ -207,8 +349,98 @@ export function str(value?: string): Stringable {
 }
 
 /**
+ * Call the given Closure with the given value then return the value.
+ */
+export function tap<TValue>(value: TValue, callback?: (value: TValue) => any): TValue {
+    if (callback === undefined) {
+        return value;
+    }
+
+    callback(value);
+
+    return value;
+}
+
+/**
+ * Throw the given exception if the given condition is true.
+ *
+ * @throws {Error} If condition is true.
+ */
+export function throw_if<TValue, TParams extends any, TExceptionValue extends Error | string>(
+    condition: TValue,
+    exception: ((...params: TParams[]) => TExceptionValue) | TExceptionValue = new Error() as any,
+    ...parameters: TParams[]
+): never | TValue {
+    if (condition) {
+        if (typeof exception === 'function') {
+            exception = exception(...parameters);
+        }
+
+        throw typeof exception === 'string' ? new Error(exception as string) : exception;
+    }
+
+    return condition;
+}
+
+/**
+ * Throw the given exception unless the given condition is true.
+ *
+ * @throws {Error} If condition is true.
+ */
+export function throw_unless<TValue, TParams extends any, TExceptionValue extends Error | string>(
+    condition: TValue,
+    exception: ((params: TParams) => TExceptionValue) | TExceptionValue = new Error() as any,
+    ...parameters: TParams[]
+): never | TValue {
+    throw_if(!condition, exception, ...parameters);
+
+    return condition;
+}
+
+/**
+ * Transform the given value if it is present.
+ */
+export function transform<TValue, TReturn, TDefault>(
+    value: TValue,
+    callback: (value: TValue) => TReturn,
+    defaultValue?: TDefault | ((value: TValue) => TDefault),
+): TDefault | TReturn {
+    if (filled(value)) {
+        return callback(value);
+    }
+
+    if (typeof defaultValue === 'function') {
+        return (defaultValue as Function)(value);
+    }
+
+    return defaultValue as TDefault;
+}
+
+/**
  * Return the default value of the given value.
  */
 export function value<TValue, TArgs extends any[]>(v: TValue | ((...args: TArgs) => TValue), ...args: TArgs): TValue {
     return typeof v === 'function' ? (v as (...args: TArgs) => TValue)(...args) : v;
+}
+
+/**
+ * Return a value if the given condition is true.
+ */
+export function when(condition: any, whenTrue: Function | any, defaultValue?: Function | any): any {
+    condition = typeof condition === 'function' ? condition() : condition;
+
+    if (condition) {
+        return value(whenTrue, condition);
+    }
+
+    return value(defaultValue, condition);
+}
+
+/**
+ * Return the given value, optionally passed through the given callback.
+ *
+ * @alias Laravel's `with()`
+ */
+export function pass<TValue, TReturn>(value: TValue, callback?: (value: TValue) => TReturn): TValue | TReturn {
+    return callback === undefined ? value : callback(value);
 }

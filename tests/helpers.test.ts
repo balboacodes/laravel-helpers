@@ -1,6 +1,24 @@
 import { expect, test } from 'vitest';
-import { data_fill, data_forget, data_get, data_has, data_set, head, last, str, value } from '../src/helpers';
+// prettier-ignore
+import {
+    blank, data_fill, data_forget, data_get, data_has, data_set, e, filled, head, last, now, pass, preg_replace_array, rescue, retry, str, tap, throw_if, throw_unless, transform, value, when,
+} from '../src/helpers';
 import { Stringable } from '../src/Stringable';
+
+test('blank', () => {
+    expect(blank(null)).toEqual(true);
+    expect(blank('')).toEqual(true);
+    expect(blank('  ')).toEqual(true);
+    expect(blank(new Stringable(''))).toEqual(true);
+    expect(blank(new Stringable('  '))).toEqual(true);
+    expect(blank(10)).toEqual(false);
+    expect(blank(true)).toEqual(false);
+    expect(blank(false)).toEqual(false);
+    expect(blank(0)).toEqual(false);
+    expect(blank(0.0)).toEqual(false);
+    expect(blank(new Stringable(' FooBar '))).toEqual(false);
+    expect(blank({})).toEqual(true);
+});
 
 test('data_fill', () => {
     let data: any = { foo: 'bar' };
@@ -307,6 +325,26 @@ test('data_set', () => {
     });
 });
 
+test('e', () => {
+    const str = "A 'quote' is <b>bold</b>";
+    expect(e(str)).toEqual('A &#039;quote&#039; is &lt;b&gt;bold&lt;/b&gt;');
+});
+
+test('filled', () => {
+    expect(filled(null)).toEqual(false);
+    expect(filled('')).toEqual(false);
+    expect(filled('  ')).toEqual(false);
+    expect(filled(new Stringable(''))).toEqual(false);
+    expect(filled(new Stringable('  '))).toEqual(false);
+    expect(filled(10)).toEqual(true);
+    expect(filled(true)).toEqual(true);
+    expect(filled(false)).toEqual(true);
+    expect(filled(0)).toEqual(true);
+    expect(filled(0.0)).toEqual(true);
+    expect(filled(new Stringable(' FooBar '))).toEqual(true);
+    expect(filled({})).toEqual(false);
+});
+
 test('head', () => {
     const array = ['a', 'b', 'c'];
 
@@ -319,11 +357,185 @@ test('last', () => {
     expect(last(array)).toBe('c');
 });
 
+test('now', () => {
+    let date = now();
+    expect(date).toBeInstanceOf(Date);
+
+    date.setDate(1);
+    expect(date.getDate()).toEqual(1);
+
+    date = now('utc');
+    expect(date).toBeInstanceOf(Date);
+
+    date.setUTCFullYear(2000);
+    expect(date.getUTCFullYear()).toEqual(2000);
+});
+
+test('pass', () => {
+    expect(pass(10)).toEqual(10);
+    expect(pass(5, (five) => five + 5)).toEqual(10);
+});
+
+test.each([
+    [
+        '/:[a-z_]+/',
+        ['8:30', '9:00'],
+        'The event will take place between :start and :end',
+        'The event will take place between 8:30 and 9:00',
+    ],
+    ['/%s/', ['Taylor'], 'Hi, %s', 'Hi, Taylor'],
+    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+    ['/%s/', [], 'Hi, %s %s', 'Hi,  '],
+    ['/%s/', ['a', 'b', 'c'], 'Hi', 'Hi'],
+    ['//', [], '', ''],
+    ['/%s/', ['a'], '', ''],
+    // non-sequential numeric keys → should still consume in natural order
+    ['/%s/', { 2: 'A', 10: 'B' }, '%s %s', 'A B'],
+    // associative keys → order should be insertion order, not keys/pointer
+    ['/%s/', { first: 'A', second: 'B' }, '%s %s', 'A B'],
+    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+])('preg_replace_array(%s, $1, %s) => %s', (pattern, replacements, subject, expectedOutput) => {
+    expect(preg_replace_array(pattern, replacements, subject)).toEqual(expectedOutput);
+});
+
+test('rescue', () => {
+    const th = () => {
+        throw new Error();
+    };
+    expect(rescue(() => true)).toEqual(true);
+    expect(rescue(th)).toEqual(undefined);
+    expect(rescue(th, () => 'rescued')).toEqual('rescued');
+});
+
+test('retry', () => {
+    let start = Date.now();
+    let attempts = retry(
+        2,
+        (attempts) => {
+            if (attempts > 1) {
+                return attempts;
+            }
+
+            throw new Error();
+        },
+        100,
+    );
+
+    // Make sure we made two attempts
+    expect(attempts).toEqual(2);
+
+    // Make sure we waited 100ms for the first attempt
+    expect(Date.now()).toBeCloseTo(start + 100, 0);
+
+    start = Date.now();
+    attempts = retry(
+        3,
+        (attempts) => {
+            if (attempts > 2) {
+                return attempts;
+            }
+
+            throw new Error();
+        },
+        (attempt, exception) => {
+            expect(exception).toBeInstanceOf(Error);
+
+            return attempt * 100;
+        },
+    );
+
+    // Make sure we made three attempts
+    expect(attempts).toEqual(3);
+
+    // Make sure we waited 300ms for the first two attempts
+    expect(Date.now()).toBeCloseTo(start + 300, 0);
+
+    start = Date.now();
+    attempts = retry(
+        2,
+        (attempts) => {
+            if (attempts > 1) {
+                return attempts;
+            }
+
+            throw new Error();
+        },
+        100,
+        () => true,
+    );
+
+    // Make sure we made two attempts
+    expect(attempts).toEqual(2);
+
+    // Make sure we waited 100ms for the first attempt
+    expect(Date.now()).toBeCloseTo(start + 100, 0);
+
+    expect(() =>
+        retry(
+            2,
+            (attempts) => {
+                if (attempts > 1) {
+                    return attempts;
+                }
+
+                throw new Error();
+            },
+            100,
+            () => false,
+        ),
+    ).toThrow(Error);
+
+    attempts = retry([50, 100, 200], (attempts) => {
+        if (attempts > 3) {
+            return attempts;
+        }
+
+        throw new Error();
+    });
+
+    // Make sure we made four attempts
+    expect(attempts).toEqual(4);
+});
+
 test('str', () => {
     const string = new Stringable('foo');
 
     expect(str(string.toString())).toBeInstanceOf(Stringable);
     expect(str('foo').toString()).toBe(string.toString());
+});
+
+test('tap', () => {
+    const object = { id: 1 };
+    expect(tap(object, (object) => (object.id = 2)).id).toEqual(2);
+});
+
+test('throw_if', () => {
+    expect(() => throw_if(true, new Error())).toThrow(Error);
+    expect(() => throw_if(true)).toThrow();
+    expect(() => throw_if(true, 'test')).toThrow('test');
+    expect(() => throw_if(true, () => new Error('test'))).toThrow('test');
+    expect(() => throw_if(true, (message) => new Error(message), 'test')).toThrow('test');
+    expect(throw_if(false, new Error())).toEqual(false);
+});
+
+test('throw_unless', () => {
+    expect(() => throw_unless(false, new Error())).toThrow();
+    expect(() => throw_unless(false)).toThrow();
+    expect(() => throw_unless(false, 'test')).toThrow('test');
+    expect(throw_unless('foo', new Error())).toEqual('foo');
+});
+
+test('transform', () => {
+    expect(transform(5, (value) => value * 2)).toEqual(10);
+    expect(transform(null, () => 10)).toEqual(undefined);
+    expect(transform(null, () => 'bar', 'baz')).toEqual('baz');
+    expect(
+        transform(
+            '',
+            () => 'bar',
+            () => 'baz',
+        ),
+    ).toEqual('baz');
 });
 
 test('value', () => {
@@ -333,4 +545,55 @@ test('value', () => {
     expect(value('foo')).toBe('foo');
     expect(value(() => 'foo')).toBe('foo');
     expect(value((arg) => arg, 'foo')).toBe('foo');
+});
+
+test('when', () => {
+    expect(when(true, 'Hello')).toEqual('Hello');
+    expect(when(false, 'Hello')).toEqual(undefined);
+    expect(when(1 === 1, 'There')).toEqual('There'); // strict types
+    // @ts-ignore
+    expect(when(1 == '1', 'There')).toEqual('There'); // loose types
+    // @ts-ignore
+    expect(when(1 == 2, 'There')).toEqual(undefined);
+    expect(when('1', () => null)).toEqual(null);
+    expect(when(0, () => null)).toEqual(undefined);
+    expect(when([1, 2, 3, 4], 'True')).toEqual('True'); // Array
+    expect(when([], 'True')).toEqual('True'); // Empty Array = Truthy
+    expect(when({}, () => 'True')).toEqual('True'); // Object
+    expect(when(false, 'Hello', 'World')).toEqual('World');
+    // @ts-ignore
+    expect(when(1 === 0, 'Hello', 'World')).toEqual('World'); // strict types
+    // @ts-ignore
+    expect(when(1 == '0', 'Hello', 'World')).toEqual('World'); // loose types
+    expect(
+        when(
+            '',
+            () => 'There',
+            () => null,
+        ),
+    ).toEqual(null);
+    expect(
+        when(
+            0,
+            () => 'There',
+            () => null,
+        ),
+    ).toEqual(null);
+    expect(when([], 'True', 'False')).toEqual('True'); // Empty Array = Truthy
+    expect(
+        when(
+            true,
+            (value: true) => value,
+            (value: true) => !value,
+        ),
+    ).toEqual(true); // lazy evaluation
+    expect(
+        when(
+            false,
+            (value: false) => value,
+            (value: false) => !value,
+        ),
+    ).toEqual(true); // lazy evaluation
+    expect(when(() => true, 'Hello')).toEqual('Hello'); // lazy evaluation condition
+    expect(when(() => false, 'Hello', 'World')).toEqual('World'); // lazy evaluation condition
 });
