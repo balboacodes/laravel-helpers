@@ -8,7 +8,9 @@ This package is a TypeScript port of many [Laravel](https://github.com/laravel) 
 
 ## Installation
 
-`npm i @balboacodes/laravel-helpers`
+```
+npm i @balboacodes/laravel-helpers
+```
 
 ## Usage
 
@@ -74,6 +76,33 @@ const slice = str('This is my name').after('This is ').title();
 // 'My Name'
 ```
 
+### Miscellaneous
+
+```ts
+import { blank, throw_if } from '@balboacodes/laravel-helpers';
+
+blank('');
+blank('   ');
+blank(null);
+blank(collect());
+
+// true
+
+blank(0);
+blank(true);
+blank(false);
+
+// false
+
+throw_if(true, () => new Error('test');
+
+// throws
+
+throw_if(false, new Error());
+
+// doesn't throw
+```
+
 ## Documentation
 
 The documentaion for all of the helpers can be found on Laravel's documentation pages. All you have to do is convert the syntax to JS. Here are the relevant pages to look at:
@@ -82,6 +111,7 @@ The documentaion for all of the helpers can be found on Laravel's documentation 
 - [Collections](https://laravel.com/docs/12.x/collections#available-methods)
 - [Numbers](https://laravel.com/docs/12.x/helpers#numbers-method-list)
 - [Strings](https://laravel.com/docs/12.x/strings#available-methods)
+- [Miscellaneous](https://laravel.com/docs/12.x/helpers#miscellaneous-method-list)
 
 ## Related
 
