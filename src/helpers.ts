@@ -224,6 +224,14 @@ export function data_set(
 }
 
 /**
+ * Dump and die.
+ */
+export function dd(...args: any[]): void {
+    console.log(...args);
+    throw new Error();
+}
+
+/**
  * Encode HTML special characters in a string.
  */
 export function e(value: string, doubleEncode = true): string {
