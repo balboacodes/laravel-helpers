@@ -1,4 +1,5 @@
 export { Arr } from './Arr';
+export { Benchmark } from './Benchmark';
 export { Collection } from './Collection';
 // prettier-ignore
 export {

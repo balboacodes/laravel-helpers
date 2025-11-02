@@ -103,6 +103,25 @@ throw_if(false, new Error());
 // doesn't throw
 ```
 
+### Other Utilities
+
+#### Benchmarking
+
+```ts
+import { Benchmark } from '@balboacodes/laravel-helpers';
+
+const benchmark = Benchmark.measure(() => /* some operation */, 10);
+
+// 0.5 ms
+
+const benchmarks = Benchmark::measure({
+    'Scenario 1': () => /* some operation */,
+    'Scenario 2': () => /* some operation */,
+});
+
+// { 'Scenario 1': 0.5 ms, 'Scenario 2': 20.0 ms }
+```
+
 ## Documentation
 
 The documentaion for all of the helpers can be found on Laravel's documentation pages. All you have to do is convert the syntax to JS. Here are the relevant pages to look at:
@@ -112,6 +131,7 @@ The documentaion for all of the helpers can be found on Laravel's documentation 
 - [Numbers](https://laravel.com/docs/12.x/helpers#numbers-method-list)
 - [Strings](https://laravel.com/docs/12.x/strings#available-methods)
 - [Miscellaneous](https://laravel.com/docs/12.x/helpers#miscellaneous-method-list)
+- [Benchmarking](https://laravel.com/docs/12.x/helpers#benchmarking)
 
 ## Related
 
