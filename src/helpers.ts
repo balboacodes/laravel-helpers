@@ -254,16 +254,8 @@ export function last<T>(array: T[] | Record<string, T>): any {
 /**
  * Create a new Date instance for the current time.
  */
-export function now(tz: 'local' | 'utc' = 'local'): Date {
-    const now = new Date();
-
-    if (tz === 'local') {
-        return now;
-    }
-
-    const parsed = Date.parse(now.toUTCString());
-
-    return new Date(parsed);
+export function now(): Date {
+    return new Date();
 }
 
 /**
@@ -331,9 +323,9 @@ export function retry<TValue>(
             sleepMilliseconds = backoff[attempts - 1] ?? sleepMilliseconds;
 
             if (sleepMilliseconds) {
-                const end = Date.now() + value(sleepMilliseconds, attempts, e);
+                const end = performance.now() + value(sleepMilliseconds, attempts, e);
 
-                while (Date.now() < end) {
+                while (performance.now() < end) {
                     // sleep
                 }
             }

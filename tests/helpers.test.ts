@@ -358,17 +358,11 @@ test('last', () => {
 });
 
 test('now', () => {
-    let date = now();
+    const date = now();
     expect(date).toBeInstanceOf(Date);
 
     date.setDate(1);
     expect(date.getDate()).toEqual(1);
-
-    date = now('utc');
-    expect(date).toBeInstanceOf(Date);
-
-    date.setUTCFullYear(2000);
-    expect(date.getUTCFullYear()).toEqual(2000);
 });
 
 test('pass', () => {
@@ -376,26 +370,30 @@ test('pass', () => {
     expect(pass(5, (five) => five + 5)).toEqual(10);
 });
 
-test.each([
+test('preg_replace_array', () => {
     [
-        '/:[a-z_]+/',
-        ['8:30', '9:00'],
-        'The event will take place between :start and :end',
-        'The event will take place between 8:30 and 9:00',
-    ],
-    ['/%s/', ['Taylor'], 'Hi, %s', 'Hi, Taylor'],
-    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
-    ['/%s/', [], 'Hi, %s %s', 'Hi,  '],
-    ['/%s/', ['a', 'b', 'c'], 'Hi', 'Hi'],
-    ['//', [], '', ''],
-    ['/%s/', ['a'], '', ''],
-    // non-sequential numeric keys → should still consume in natural order
-    ['/%s/', { 2: 'A', 10: 'B' }, '%s %s', 'A B'],
-    // associative keys → order should be insertion order, not keys/pointer
-    ['/%s/', { first: 'A', second: 'B' }, '%s %s', 'A B'],
-    ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
-])('preg_replace_array(%s, $1, %s) => %s', (pattern, replacements, subject, expectedOutput) => {
-    expect(preg_replace_array(pattern, replacements, subject)).toEqual(expectedOutput);
+        [
+            '/:[a-z_]+/',
+            ['8:30', '9:00'],
+            'The event will take place between :start and :end',
+            'The event will take place between 8:30 and 9:00',
+        ],
+        ['/%s/', ['Taylor'], 'Hi, %s', 'Hi, Taylor'],
+        ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+        ['/%s/', [], 'Hi, %s %s', 'Hi,  '],
+        ['/%s/', ['a', 'b', 'c'], 'Hi', 'Hi'],
+        ['//', [], '', ''],
+        ['/%s/', ['a'], '', ''],
+        // non-sequential numeric keys → should still consume in natural order
+        ['/%s/', { 2: 'A', 10: 'B' }, '%s %s', 'A B'],
+        // associative keys → order should be insertion order, not keys/pointer
+        ['/%s/', { first: 'A', second: 'B' }, '%s %s', 'A B'],
+        ['/%s/', ['Taylor', 'Otwell'], 'Hi, %s %s', 'Hi, Taylor Otwell'],
+    ].forEach(([pattern, replacements, subject, expectedOutput]) => {
+        expect(
+            preg_replace_array(pattern as string, replacements as string[] | Record<string, string>, subject as string),
+        ).toEqual(expectedOutput as string);
+    });
 });
 
 test('rescue', () => {
@@ -408,7 +406,7 @@ test('rescue', () => {
 });
 
 test('retry', () => {
-    let start = Date.now();
+    let start = performance.now();
     let attempts = retry(
         2,
         (attempts) => {
@@ -425,9 +423,9 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(Date.now()).toBeCloseTo(start + 100, 0);
+    expect(performance.now()).toBeCloseTo(start + 100, 0);
 
-    start = Date.now();
+    start = performance.now();
     attempts = retry(
         3,
         (attempts) => {
@@ -448,9 +446,9 @@ test('retry', () => {
     expect(attempts).toEqual(3);
 
     // Make sure we waited 300ms for the first two attempts
-    expect(Date.now()).toBeCloseTo(start + 300, 0);
+    expect(performance.now()).toBeCloseTo(start + 300, 0);
 
-    start = Date.now();
+    start = performance.now();
     attempts = retry(
         2,
         (attempts) => {
@@ -468,7 +466,7 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(Date.now()).toBeCloseTo(start + 100, 0);
+    expect(performance.now()).toBeCloseTo(start + 100, 0);
 
     expect(() =>
         retry(
