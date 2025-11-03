@@ -7,5 +7,6 @@ export {
 } from './helpers';
 export { Lottery } from './Lottery';
 export { NumberFormatter } from './NumberFormatter';
+export { Pipeline } from './Pipeline';
 export { Str } from './Str';
 export { Stringable } from './Stringable';
