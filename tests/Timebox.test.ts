@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { Timebox } from '../src/Timebox';
 
 test('executes callback', () => {
@@ -8,53 +8,68 @@ test('executes callback', () => {
 });
 
 test('waits for milliseconds', () => {
-    // mock = m::spy(Timebox::class).shouldAllowMockingProtectedMethods().makePartial();
-    //         mock.shouldReceive('usleep').once();
-    //         mock.call(function () {
-    //         }, 10000);
-    //         mock.shouldHaveReceived('usleep').once();
+    const tb = new Timebox();
+    // @ts-ignore
+    const mock = vi.spyOn(tb, 'sleep');
+
+    tb.call(() => {}, 10);
+
+    expect(mock).toHaveBeenCalledOnce();
 });
 
 test('should not sleep when early return has been flagged', () => {
-    //         mock = m::spy(Timebox::class).shouldAllowMockingProtectedMethods().makePartial();
-    //         mock.call(function (timebox) {
-    //             timebox.returnEarly();
-    //         }, 10000);
-    //         mock.shouldNotHaveReceived('usleep');
+    const tb = new Timebox();
+    // @ts-ignore
+    const mock = vi.spyOn(tb, 'sleep');
+
+    tb.call((timebox) => timebox.returnEarly(), 10);
+
+    expect(mock).not.toHaveBeenCalled();
 });
 
 test('should sleep when dontEarlyReturn has been flagged', () => {
-    //         mock = m::spy(Timebox::class).shouldAllowMockingProtectedMethods().makePartial();
-    //         mock.shouldReceive('usleep').once();
-    //         mock.call(function (timebox) {
-    //             timebox.returnEarly();
-    //             timebox.dontReturnEarly();
-    //         }, 10000);
-    //         mock.shouldHaveReceived('usleep').once();
+    const tb = new Timebox();
+    // @ts-ignore
+    const mock = vi.spyOn(tb, 'sleep');
+
+    tb.call((timebox) => {
+        timebox.returnEarly();
+        timebox.dontReturnEarly();
+    }, 10);
+
+    expect(mock).toHaveBeenCalledOnce();
 });
 
 test('waits for milliseconds when exception is thrown', () => {
-    //         mock = m::spy(Timebox::class).shouldAllowMockingProtectedMethods().makePartial();
-    //         mock.shouldReceive('usleep').once();
-    //         try {
-    //             this.expectExceptionMessage('Exception within Timebox callback.');
-    //             mock.call(function () {
-    //                 throw new Exception('Exception within Timebox callback.');
-    //             }, 10000);
-    //         } finally {
-    //             mock.shouldHaveReceived('usleep').once();
-    //         }
+    const tb = new Timebox();
+    // @ts-ignore
+    const mock = vi.spyOn(tb, 'sleep');
+
+    expect(() => {
+        try {
+            tb.call(() => {
+                throw new Error('Exception within Timebox callback.');
+            }, 10);
+        } finally {
+            expect(mock).toHaveBeenCalledOnce();
+        }
+    }).toThrow('Exception within Timebox callback.');
 });
 
 test('should not sleep when early return has been flagged and exception is thrown', () => {
-    //         mock = m::spy(Timebox::class).shouldAllowMockingProtectedMethods().makePartial();
-    //         try {
-    //             this.expectExceptionMessage('Exception within Timebox callback.');
-    //             mock.call(function (timebox) {
-    //                 timebox.returnEarly();
-    //                 throw new Exception('Exception within Timebox callback.');
-    //             }, 10000);
-    //         } finally {
-    //             mock.shouldNotHaveReceived('usleep');
-    //         }
+    const tb = new Timebox();
+    // @ts-ignore
+    const mock = vi.spyOn(tb, 'sleep');
+
+    expect(() => {
+        try {
+            tb.call((timebox) => {
+                timebox.returnEarly();
+
+                throw new Error('Exception within Timebox callback.');
+            }, 10);
+        } finally {
+            expect(mock).not.toHaveBeenCalled();
+        }
+    }).toThrow('Exception within Timebox callback.');
 });
