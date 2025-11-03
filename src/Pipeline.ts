@@ -1,20 +1,12 @@
 import { array_reverse } from '@balboacodes/php-utils';
-import { array_pad } from '@balboacodes/php-utils';
-import { explode } from '@balboacodes/php-utils';
-import { array_merge } from '@balboacodes/php-utils';
 import { array_reduce } from '@balboacodes/php-utils';
 import { array_push } from '@balboacodes/php-utils';
 
 export class Pipeline {
     /**
-     * The object being passed through the pipeline.
+     * The final callback to be executed after the pipeline ends regardless of the outcome.
      */
-    protected passable: any;
-
-    /**
-     * The array of class pipes.
-     */
-    protected pipesArr: any[] = [];
+    protected finallyFn?: (passable?: any) => any;
 
     /**
      * The method to call on each pipe.
@@ -22,14 +14,36 @@ export class Pipeline {
     protected method: string = 'handle';
 
     /**
-     * The final callback to be executed after the pipeline ends regardless of the outcome.
+     * The object being passed through the pipeline.
      */
-    protected finallyFn?: Function;
+    protected passable?: any;
 
     /**
-     * Create a new class instance.
+     * The array of class pipes.
      */
-    public constructor() {}
+    protected pipesArr: (object | (() => any))[] = [];
+
+    /**
+     * Set a final callback to be executed after the pipeline ends regardless of the outcome.
+     */
+    public finally(callback: (passable?: any) => any): this {
+        this.finallyFn = callback;
+
+        return this;
+    }
+
+    /**
+     * Push additional pipes onto the pipeline.
+     */
+    public pipe(
+        ...pipes:
+            | [object | ((passable: any, next: object | ((passable: any) => any)) => any)]
+            | (object | ((passable: any, next: object | ((passable: any) => any)) => any))[]
+    ): this {
+        array_push(this.pipesArr, ...(Array.isArray(pipes[0]) ? pipes[0] : pipes));
+
+        return this;
+    }
 
     /**
      * Set the object being sent through the pipeline.
@@ -41,36 +55,9 @@ export class Pipeline {
     }
 
     /**
-     * Set the array of pipes.
-     */
-    public through(...pipes: any[]): this {
-        this.pipesArr = Array.isArray(pipes[0]) ? pipes[0] : pipes;
-
-        return this;
-    }
-
-    /**
-     * Push additional pipes onto the pipeline.
-     */
-    public pipe(...pipes: any[]): this {
-        array_push(this.pipesArr, ...(Array.isArray(pipes[0]) ? pipes[0] : pipes));
-
-        return this;
-    }
-
-    /**
-     * Set the method to call on the pipes.
-     */
-    public via(method: string): this {
-        this.method = method;
-
-        return this;
-    }
-
-    /**
      * Run the pipeline with a final destination callback.
      */
-    public then(destination: Function): any {
+    public then(destination: (passable: any) => any): any {
         const pipeline = array_reduce(array_reverse(this.pipes()), this.carry(), this.prepareDestination(destination));
 
         try {
@@ -86,37 +73,19 @@ export class Pipeline {
      * Run the pipeline and return the result.
      */
     public thenReturn(): any {
-        return this.then((passable) => passable);
+        return this.then((passable: any) => passable);
     }
 
     /**
-     * Set a final callback to be executed after the pipeline ends regardless of the outcome.
+     * Set the array of pipes.
      */
-    public finally(callback: Function): this {
-        this.finallyFn = callback;
-
-        return this;
-    }
-
-    /**
-     * Apply the callback if the given "value" is (or resolves to) truthy.
-     */
-    public when<TWhenParameter, TWhenReturnType>(
-        value?: ((instance: this) => TWhenParameter) | TWhenParameter,
-        callback?: (instance: this, when: TWhenParameter) => TWhenReturnType,
-        defaultValue?: (instance: this, when: TWhenParameter) => TWhenReturnType,
-    ): this | TWhenReturnType {
-        value = typeof value === 'function' ? (value as Function)(this) : value;
-
-        if (arguments.length === 0) {
-            return this;
-        }
-
-        if (value) {
-            return callback?.(this, value as TWhenParameter) ?? this;
-        } else if (defaultValue) {
-            return defaultValue(this, value as TWhenParameter) ?? this;
-        }
+    public through(
+        ...pipes: (
+            | [object | ((passable: any, next: object | ((passable: any) => any)) => any)]
+            | (object | ((passable: any, next: object | ((passable: any) => any)) => any))
+        )[]
+    ): this {
+        this.pipesArr = Array.isArray(pipes[0]) ? pipes[0] : pipes;
 
         return this;
     }
@@ -129,7 +98,7 @@ export class Pipeline {
         callback?: (instance: this, unless: TUnlessParameter) => TUnlessReturnType,
         defaultValue?: (instance: this, unless: TUnlessParameter) => TUnlessReturnType,
     ): this | TUnlessReturnType {
-        value = typeof value === 'function' ? (value as Function)(this) : value;
+        value = typeof value === 'function' ? (value as (instance: this) => TUnlessParameter)(this) : value;
 
         if (arguments.length === 0) {
             return this;
@@ -145,24 +114,46 @@ export class Pipeline {
     }
 
     /**
-     * Get the final piece of the Closure onion.
+     * Set the method to call on the pipes.
      */
-    protected prepareDestination(destination: Function): Function {
-        return (passable) => {
-            try {
-                return destination(passable);
-            } catch (e: any) {
-                return this.handleException(passable, e);
-            }
-        };
+    public via(method: string): this {
+        this.method = method;
+
+        return this;
+    }
+
+    /**
+     * Apply the callback if the given "value" is (or resolves to) truthy.
+     */
+    public when<TWhenParameter, TWhenReturnType>(
+        value?: ((instance: this) => TWhenParameter) | TWhenParameter,
+        callback?: (instance: this, when: TWhenParameter) => TWhenReturnType,
+        defaultValue?: (instance: this, when: TWhenParameter) => TWhenReturnType,
+    ): this | TWhenReturnType {
+        value = typeof value === 'function' ? (value as (instance: this) => TWhenParameter)(this) : value;
+
+        if (arguments.length === 0) {
+            return this;
+        }
+
+        if (value) {
+            return callback?.(this, value as TWhenParameter) ?? this;
+        } else if (defaultValue) {
+            return defaultValue(this, value as TWhenParameter) ?? this;
+        }
+
+        return this;
     }
 
     /**
      * Get a Closure that represents a slice of the application onion.
      */
-    protected carry(): Function {
-        return (stack, pipe) => {
-            return (passable) => {
+    protected carry(): (stack: any, pipe: any) => any {
+        return (
+            stack: (passable: any) => any,
+            pipe: object | ((passable: any, next: (passable: any) => any) => any),
+        ) => {
+            return (passable: any) => {
                 let parameters;
 
                 try {
@@ -178,21 +169,14 @@ export class Pipeline {
                     // since the object we're given was already a fully instantiated object.
                     parameters = [passable, stack];
 
-                    const carry = pipe[this.method](...parameters);
+                    const carry = (pipe as any)[this.method](...parameters);
 
                     return this.handleCarry(carry);
                 } catch (e: any) {
-                    return this.handleException(passable, e);
+                    return this.handleException(e);
                 }
             };
         };
-    }
-
-    /**
-     * Get the array of configured pipes.
-     */
-    protected pipes(): any[] {
-        return this.pipesArr;
     }
 
     /**
@@ -207,7 +191,27 @@ export class Pipeline {
      *
      * @throws {Error}
      */
-    protected handleException(passable: any, e: Error): any {
+    protected handleException(e: Error): any {
         throw e;
+    }
+
+    /**
+     * Get the array of configured pipes.
+     */
+    protected pipes(): (object | ((passable: any, next: (passable: any) => any) => any))[] {
+        return this.pipesArr;
+    }
+
+    /**
+     * Get the final piece of the Closure onion.
+     */
+    protected prepareDestination(destination: (passable: any) => any): (passable: any) => any {
+        return (passable: any) => {
+            try {
+                return destination(passable);
+            } catch (e: any) {
+                return this.handleException(e);
+            }
+        };
     }
 }

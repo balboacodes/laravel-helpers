@@ -5,27 +5,19 @@ import { unset } from '@balboacodes/php-utils';
 let $_SERVER = {};
 
 class PipelineTestPipeOne {
-    public handle(piped, next) {
+    public handle(piped: any, next: (passable: any) => any) {
         $_SERVER['__test.pipe.one'] = piped;
 
         return next(piped);
     }
 
-    public differentMethod(piped, next) {
-        return next(piped);
-    }
-}
-
-class PipelineTestParameterPipe {
-    public handle(piped, next, parameter1?, parameter2?) {
-        $_SERVER['__test.pipe.parameters'] = [parameter1, parameter2];
-
+    public differentMethod(piped: any, next: (passable: any) => any) {
         return next(piped);
     }
 }
 
 test('pipeline basic usage', () => {
-    const pipeTwo = (piped, next) => {
+    const pipeTwo = (piped: any, next: (passable: any) => any) => {
         $_SERVER['__test.pipe.two'] = piped;
 
         return next(piped);
@@ -48,7 +40,7 @@ test('pipeline usage with objects', () => {
     const result = new Pipeline()
         .send('foo')
         .through([new PipelineTestPipeOne()])
-        .then((piped) => piped);
+        .then((piped: any) => piped);
 
     expect(result).toEqual('foo');
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
@@ -57,7 +49,7 @@ test('pipeline usage with objects', () => {
 });
 
 test('pipeline usage with callable', () => {
-    const fn = (piped, next) => {
+    const fn = (piped: any, next: (passable: any) => any) => {
         $_SERVER['__test.pipe.one'] = 'foo';
 
         return next(piped);
@@ -66,7 +58,7 @@ test('pipeline usage with callable', () => {
     let result = new Pipeline()
         .send('foo')
         .through([fn])
-        .then((piped) => piped);
+        .then((piped: any) => piped);
 
     expect(result).toEqual('foo');
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
@@ -83,7 +75,7 @@ test('pipeline usage with callable', () => {
 
 test('pipeline usage with pipe', () => {
     const object = { value: 0 };
-    const fn = (object, next) => {
+    const fn = (object: any, next: (passable: any) => any) => {
         object.value++;
 
         return next(object);
@@ -93,7 +85,7 @@ test('pipeline usage with pipe', () => {
         .send(object)
         .through([fn])
         .pipe([fn])
-        .then((piped) => piped);
+        .then((piped: any) => piped);
 
     expect(result).toEqual(object);
     expect(object.value).toEqual(2);
@@ -101,7 +93,7 @@ test('pipeline usage with pipe', () => {
 
 test('pipeline through method overwrites previously set and appended pipes', () => {
     const object = { value: 0 };
-    const fn = (object, next) => {
+    const fn = (object: any, next: (passable: any) => any) => {
         object.value++;
 
         return next(object);
@@ -112,7 +104,7 @@ test('pipeline through method overwrites previously set and appended pipes', () 
         .through([fn])
         .pipe([fn])
         .through([fn])
-        .then((piped) => piped);
+        .then((piped: any) => piped);
 
     expect(result).toEqual(object);
     expect(object.value).toEqual(1);
@@ -124,8 +116,8 @@ test('then method is not called if the pipe returns', () => {
 
     const result = new Pipeline()
         .send('foo')
-        .through([(value, next) => 'm(-_-)m', (value, next) => ($_SERVER['__test.pipe.second'] = 'm(-_-)m')])
-        .then((piped) => {
+        .through([() => 'm(-_-)m', () => ($_SERVER['__test.pipe.second'] = 'm(-_-)m')])
+        .then((piped: any) => {
             $_SERVER['__test.pipe.then'] = '(0_0)';
 
             return piped;
@@ -144,14 +136,14 @@ test('then method input value', () => {
     const result = new Pipeline()
         .send('foo')
         .through([
-            (value, next) => {
+            (value: any, next: (passable: any) => any) => {
                 value = next('::not_foo::');
                 $_SERVER['__test.pipe.return'] = value;
 
                 return 'pipe::' + value;
             },
         ])
-        .then((piped) => {
+        .then((piped: any) => {
             $_SERVER['__test.then.arg'] = piped;
 
             return 'then' + piped;
@@ -170,7 +162,7 @@ test('pipeline via changes the method being called on the pipes', () => {
         .send('data')
         .through(new PipelineTestPipeOne())
         .via('differentMethod')
-        .then((piped) => piped);
+        .then((piped: any) => piped);
 
     expect(result).toEqual('data');
 });
@@ -187,10 +179,8 @@ test('pipeline then return method runs pipeline then returns passable', () => {
 test('pipeline conditionable', () => {
     let result = new Pipeline()
         .send('foo')
-        .when(true, (pipeline: Pipeline) => {
-            pipeline.pipe([new PipelineTestPipeOne()]);
-        })
-        .then((piped) => piped);
+        .when(true, (pipeline: Pipeline) => pipeline.pipe([new PipelineTestPipeOne()]))
+        .then((piped: any) => piped);
 
     expect(result).toEqual('foo');
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
@@ -201,10 +191,8 @@ test('pipeline conditionable', () => {
 
     result = new Pipeline()
         .send('foo')
-        .when(false, (pipeline: Pipeline) => {
-            pipeline.pipe([new PipelineTestPipeOne()]);
-        })
-        .then((piped) => piped);
+        .when(false, (pipeline: Pipeline) => pipeline.pipe([new PipelineTestPipeOne()]))
+        .then((piped: any) => piped);
 
     expect(result).toEqual('foo');
     expect($_SERVER['__test.pipe.one']).toEqual(null);
@@ -213,7 +201,7 @@ test('pipeline conditionable', () => {
 });
 
 test('pipeline finally', () => {
-    const pipeTwo = (piped, next) => {
+    const pipeTwo = (piped: any, next: (passable: any) => any) => {
         $_SERVER['__test.pipe.two'] = piped;
 
         next(piped);
@@ -222,9 +210,7 @@ test('pipeline finally', () => {
     const result = new Pipeline()
         .send('foo')
         .through([new PipelineTestPipeOne(), pipeTwo])
-        .finally((piped) => {
-            $_SERVER['__test.pipe.finally'] = piped;
-        })
+        .finally((piped: any) => ($_SERVER['__test.pipe.finally'] = piped))
         .then((piped) => piped);
 
     expect(result).toEqual(undefined);
@@ -238,17 +224,15 @@ test('pipeline finally', () => {
 });
 
 test('pipeline finally method when chain is stopped', () => {
-    const pipeTwo = (piped) => {
+    const pipeTwo = (piped: any) => {
         $_SERVER['__test.pipe.two'] = piped;
     };
 
     const result = new Pipeline()
         .send('foo')
         .through([new PipelineTestPipeOne(), pipeTwo])
-        .finally((piped) => {
-            $_SERVER['__test.pipe.finally'] = piped;
-        })
-        .then((piped) => piped);
+        .finally((piped: any) => ($_SERVER['__test.pipe.finally'] = piped))
+        .then((piped: any) => piped);
 
     expect(result).toEqual(undefined);
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
@@ -261,27 +245,27 @@ test('pipeline finally method when chain is stopped', () => {
 });
 
 test('pipeline finally order', () => {
-    const std = {};
+    const std: any = {};
     const result = new Pipeline()
         .send(std)
         .through([
-            (std, next) => {
+            (std: any, next: (passable: any) => any) => {
                 std.value = 1;
 
                 return next(std);
             },
-            (std, next) => {
+            (std: any, next: (passable: any) => any) => {
                 std.value++;
 
                 return next(std);
             },
         ])
-        .finally((std) => {
+        .finally((std: any) => {
             expect(std.value).toEqual(3);
 
             std.value++;
         })
-        .then((std) => {
+        .then((std: any) => {
             std.value++;
 
             return std;
@@ -292,22 +276,22 @@ test('pipeline finally order', () => {
 });
 
 test('pipeline finally when exception occurs', () => {
-    const std = {};
+    const std: any = {};
 
     expect(() => {
         try {
             new Pipeline()
                 .send(std)
                 .through([
-                    (std, next) => {
+                    (std: any, next: (passable: any) => any) => {
                         std.value = 1;
                         return next(std);
                     },
-                    (std) => {
+                    (std: any) => {
                         throw new Error('My Exception: ' + std.value);
                     },
                 ])
-                .finally((std) => {
+                .finally((std: any) => {
                     expect(std.value).toEqual(1);
 
                     std.value++;
