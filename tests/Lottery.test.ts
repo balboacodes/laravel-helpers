@@ -1,6 +1,5 @@
 import { afterEach, test, expect } from 'vitest';
 import { Lottery } from '../src/Lottery';
-import { random_int } from '@balboacodes/php-utils';
 
 afterEach(() => {
     Lottery.determineResultNormally();
@@ -33,6 +32,7 @@ test('it can return values', () => {
     const win = Lottery.odds(1, 1)
         .winner(() => 'win')
         .choose();
+
     expect(win).toEqual('win');
 
     const lose = Lottery.odds(0, 1)
@@ -46,11 +46,13 @@ test('it can choose several times', () => {
     let results = Lottery.odds(1, 1)
         .winner(() => 'win')
         .choose(2);
+
     expect(results).toEqual(['win', 'win']);
 
     results = Lottery.odds(0, 1)
         .loser(() => 'lose')
         .choose(2);
+
     expect(results).toEqual(['lose', 'lose']);
 });
 

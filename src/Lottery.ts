@@ -178,7 +178,9 @@ export class Lottery {
         return (
             Lottery.resultFactoryFn ??
             ((chances: number, outOf?: number) =>
-                outOf === undefined ? random_int(0, 900719925) / 900719925 <= chances : random_int(1, outOf) <= chances)
+                outOf === undefined
+                    ? random_int(0, Number.MAX_SAFE_INTEGER) / Number.MAX_SAFE_INTEGER <= chances
+                    : random_int(1, outOf) <= chances)
         );
     }
 
