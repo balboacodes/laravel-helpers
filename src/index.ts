@@ -10,3 +10,4 @@ export { NumberFormatter } from './NumberFormatter';
 export { Pipeline } from './Pipeline';
 export { Str } from './Str';
 export { Stringable } from './Stringable';
+export { Timebox } from './Timebox';
