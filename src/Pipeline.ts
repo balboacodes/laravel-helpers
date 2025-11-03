@@ -171,23 +171,14 @@ export class Pipeline {
                         // will resolve the pipes out of the dependency container and call it with
                         // the appropriate method and arguments, returning the results back out.
                         return pipe(passable, stack);
-                    } else if (typeof pipe === 'string') {
-                        let [name, parameters] = this.parsePipeString(pipe);
-                        // If the pipe is a string we will parse the string. We can then build a callable
-                        // and execute the pipe function giving in the parameters that are required.
-                        pipe = this.getContainer().make(name);
-                        parameters = array_merge([passable, stack], parameters);
-                    } else {
-                        // If the pipe is already an object we'll just make a callable and pass it to
-                        // the pipe as-is. There is no need to do any extra parsing and formatting
-                        // since the object we're given was already a fully instantiated object.
-                        parameters = [passable, stack];
                     }
 
-                    const carry =
-                        Object.hasOwn(pipe, this.method) && typeof pipe[this.method] === 'function'
-                            ? pipe[this.method](...parameters)
-                            : pipe(...parameters);
+                    // If the pipe is already an object we'll just make a callable and pass it to
+                    // the pipe as-is. There is no need to do any extra parsing and formatting
+                    // since the object we're given was already a fully instantiated object.
+                    parameters = [passable, stack];
+
+                    const carry = pipe[this.method](...parameters);
 
                     return this.handleCarry(carry);
                 } catch (e: any) {
@@ -195,21 +186,6 @@ export class Pipeline {
                 }
             };
         };
-    }
-
-    /**
-     * Parse full pipe string to get name and parameters.
-     */
-    protected parsePipeString(pipe: string): any[] {
-        let [name, parameters] = array_pad(explode(':', pipe, 2), 2, null);
-
-        if (parameters !== null) {
-            parameters = explode(',', parameters);
-        } else {
-            parameters = [];
-        }
-
-        return [name, parameters];
     }
 
     /**

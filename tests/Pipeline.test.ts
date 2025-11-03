@@ -33,7 +33,7 @@ test('pipeline basic usage', () => {
 
     const result = new Pipeline()
         .send('foo')
-        .through([PipelineTestPipeOne, pipeTwo])
+        .through([new PipelineTestPipeOne(), pipeTwo])
         .then((piped) => piped);
 
     expect(result).toEqual('foo');
@@ -164,24 +164,11 @@ test('then method input value', () => {
     unset($_SERVER, '__test.pipe.return');
 });
 
-test('pipeline usage with parameters', () => {
-    const parameters = ['one', 'two'];
-    const result = new Pipeline()
-        .send('foo')
-        .through(PipelineTestParameterPipe + ':' + parameters.join(','))
-        .then((piped) => piped);
-
-    expect(result).toEqual('foo');
-    expect($_SERVER['__test.pipe.parameters']).toEqual(parameters);
-
-    unset($_SERVER, '__test.pipe.parameters');
-});
-
 test('pipeline via changes the method being called on the pipes', () => {
     const pipelineInstance = new Pipeline();
     const result = pipelineInstance
         .send('data')
-        .through(PipelineTestPipeOne)
+        .through(new PipelineTestPipeOne())
         .via('differentMethod')
         .then((piped) => piped);
 
@@ -189,7 +176,7 @@ test('pipeline via changes the method being called on the pipes', () => {
 });
 
 test('pipeline then return method runs pipeline then returns passable', () => {
-    const result = new Pipeline().send('foo').through([PipelineTestPipeOne]).thenReturn();
+    const result = new Pipeline().send('foo').through([new PipelineTestPipeOne()]).thenReturn();
 
     expect(result).toEqual('foo');
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
@@ -201,7 +188,7 @@ test('pipeline conditionable', () => {
     let result = new Pipeline()
         .send('foo')
         .when(true, (pipeline: Pipeline) => {
-            pipeline.pipe([PipelineTestPipeOne]);
+            pipeline.pipe([new PipelineTestPipeOne()]);
         })
         .then((piped) => piped);
 
@@ -215,7 +202,7 @@ test('pipeline conditionable', () => {
     result = new Pipeline()
         .send('foo')
         .when(false, (pipeline: Pipeline) => {
-            pipeline.pipe([PipelineTestPipeOne]);
+            pipeline.pipe([new PipelineTestPipeOne()]);
         })
         .then((piped) => piped);
 
@@ -234,13 +221,13 @@ test('pipeline finally', () => {
 
     const result = new Pipeline()
         .send('foo')
-        .through([PipelineTestPipeOne, pipeTwo])
+        .through([new PipelineTestPipeOne(), pipeTwo])
         .finally((piped) => {
             $_SERVER['__test.pipe.finally'] = piped;
         })
         .then((piped) => piped);
 
-    expect(result).toEqual(null);
+    expect(result).toEqual(undefined);
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
     expect($_SERVER['__test.pipe.two']).toEqual('foo');
     expect($_SERVER['__test.pipe.finally']).toEqual('foo');
@@ -257,13 +244,13 @@ test('pipeline finally method when chain is stopped', () => {
 
     const result = new Pipeline()
         .send('foo')
-        .through([PipelineTestPipeOne, pipeTwo])
+        .through([new PipelineTestPipeOne(), pipeTwo])
         .finally((piped) => {
             $_SERVER['__test.pipe.finally'] = piped;
         })
         .then((piped) => piped);
 
-    expect(result).toEqual(null);
+    expect(result).toEqual(undefined);
     expect($_SERVER['__test.pipe.one']).toEqual('foo');
     expect($_SERVER['__test.pipe.two']).toEqual('foo');
     expect($_SERVER['__test.pipe.finally']).toEqual('foo');
@@ -307,33 +294,33 @@ test('pipeline finally order', () => {
 test('pipeline finally when exception occurs', () => {
     const std = {};
 
-    try {
-        new Pipeline()
-            .send(std)
-            .through([
-                (std, next) => {
-                    std.value = 1;
+    expect(() => {
+        try {
+            new Pipeline()
+                .send(std)
+                .through([
+                    (std, next) => {
+                        std.value = 1;
+                        return next(std);
+                    },
+                    (std) => {
+                        throw new Error('My Exception: ' + std.value);
+                    },
+                ])
+                .finally((std) => {
+                    expect(std.value).toEqual(1);
 
-                    return next(std);
-                },
-                (std) => {
-                    throw new Error('My Exception: ' + std.value);
-                },
-            ])
-            .finally((std) => {
-                expect(std.value).toEqual(1);
+                    std.value++;
+                })
+                .then((std) => {
+                    std.value = 0;
 
-                std.value++;
-            })
-            .then((std) => {
-                std.value = 0;
+                    return std;
+                });
+        } catch (e: any) {
+            expect(std.value).toEqual(2);
 
-                return std;
-            });
-    } catch (e: any) {
-        expect(e).toEqual('My Exception: 1');
-        expect(std.value).toEqual(2);
-
-        throw e;
-    }
+            throw e;
+        }
+    }).toThrow('My Exception: 1');
 });
