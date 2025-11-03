@@ -122,6 +122,17 @@ const benchmarks = Benchmark::measure({
 // { 'Scenario 1': 0.5 ms, 'Scenario 2': 20.0 ms }
 ```
 
+#### Lottery
+
+```ts
+import { Lottery } from '@balboacodes/laravel-helpers';
+
+Lottery.odds(1, 20)
+    .winner(() => user.won())
+    .loser(() => user.lost())
+    .choose();
+```
+
 ## Documentation
 
 The documentaion for all of the helpers can be found on Laravel's documentation pages. All you have to do is convert the syntax to JS. Here are the relevant pages to look at:
@@ -132,6 +143,7 @@ The documentaion for all of the helpers can be found on Laravel's documentation 
 - [Strings](https://laravel.com/docs/12.x/strings#available-methods)
 - [Miscellaneous](https://laravel.com/docs/12.x/helpers#miscellaneous-method-list)
 - [Benchmarking](https://laravel.com/docs/12.x/helpers#benchmarking)
+- [Lottery](https://laravel.com/docs/12.x/helpers#lottery)
 
 ## Related
 
