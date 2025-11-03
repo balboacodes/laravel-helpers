@@ -31,7 +31,7 @@ const array = Arr.collapse([
 
 const object = {'products': {'desk': {'price': 100}}};
 
-const flattened = Arr::dot(object);
+const flattened = Arr.dot(object);
 
 // {'products.desk.price': 100}
 ```
@@ -114,7 +114,7 @@ const benchmark = Benchmark.measure(() => /* some operation */, 10);
 
 // 0.5 ms
 
-const benchmarks = Benchmark::measure({
+const benchmarks = Benchmark.measure({
     'Scenario 1': () => /* some operation */,
     'Scenario 2': () => /* some operation */,
 });
@@ -133,6 +133,28 @@ Lottery.odds(1, 20)
     .choose();
 ```
 
+#### Pipeline
+
+```ts
+import { Pipeline } from '@balboacodes/laravel-helpers';
+
+const result = new Pipeline()
+    .send(user)
+    .through([
+        (user: User, next: Closure) => {
+            // ...
+
+            return next(user);
+        },
+        (user: User, next: Closure) => {
+            // ...
+
+            return next(user);
+        },
+    ])
+    .then((user: User) => user);
+```
+
 ## Documentation
 
 The documentaion for all of the helpers can be found on Laravel's documentation pages. All you have to do is convert the syntax to JS. Here are the relevant pages to look at:
@@ -144,6 +166,7 @@ The documentaion for all of the helpers can be found on Laravel's documentation 
 - [Miscellaneous](https://laravel.com/docs/12.x/helpers#miscellaneous-method-list)
 - [Benchmarking](https://laravel.com/docs/12.x/helpers#benchmarking)
 - [Lottery](https://laravel.com/docs/12.x/helpers#lottery)
+- [Pipeline](https://laravel.com/docs/12.x/helpers#pipeline)
 
 ## Related
 
