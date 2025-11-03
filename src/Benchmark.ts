@@ -33,11 +33,11 @@ export class Benchmark {
             .map((callback) => {
                 return Collection.range(1, iterations)
                     .map(() => {
-                        const start = performance.now();
+                        const start = Date.now();
 
                         callback();
 
-                        return (performance.now() - start) / 1_000_000;
+                        return (Date.now() - start) / 1_000_000;
                     })
                     .avg();
             })
@@ -52,8 +52,8 @@ export class Benchmark {
      * Measure a callable once and return the result and duration in milliseconds.
      */
     public static value<TReturn>(callback: () => TReturn): [TReturn, number] {
-        const start = performance.now();
+        const start = Date.now();
         const result = callback();
-        return [result, (performance.now() - start) / 1_000_000];
+        return [result, (Date.now() - start) / 1_000_000];
     }
 }

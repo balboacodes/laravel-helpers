@@ -406,7 +406,7 @@ test('rescue', () => {
 });
 
 test('retry', () => {
-    let start = performance.now();
+    let start = Date.now();
     let attempts = retry(
         2,
         (attempts) => {
@@ -423,9 +423,9 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(performance.now()).toBeCloseTo(start + 100, 0);
+    expect(Date.now()).toBeCloseTo(start + 100, 0);
 
-    start = performance.now();
+    start = Date.now();
     attempts = retry(
         3,
         (attempts) => {
@@ -446,9 +446,9 @@ test('retry', () => {
     expect(attempts).toEqual(3);
 
     // Make sure we waited 300ms for the first two attempts
-    expect(performance.now()).toBeCloseTo(start + 300, 0);
+    expect(Date.now()).toBeCloseTo(start + 300, 0);
 
-    start = performance.now();
+    start = Date.now();
     attempts = retry(
         2,
         (attempts) => {
@@ -466,7 +466,7 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(performance.now()).toBeCloseTo(start + 100, 0);
+    expect(Date.now()).toBeCloseTo(start + 100, 0);
 
     expect(() =>
         retry(

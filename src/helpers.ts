@@ -331,9 +331,9 @@ export function retry<TValue>(
             sleepMilliseconds = backoff[attempts - 1] ?? sleepMilliseconds;
 
             if (sleepMilliseconds) {
-                const end = performance.now() + value(sleepMilliseconds, attempts, e);
+                const end = Date.now() + value(sleepMilliseconds, attempts, e);
 
-                while (performance.now() < end) {
+                while (Date.now() < end) {
                     // sleep
                 }
             }
