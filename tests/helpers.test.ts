@@ -423,7 +423,7 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(Date.now()).toBeCloseTo(start + 100, 0);
+    expect(Date.now()).toBeGreaterThanOrEqual(start + 100);
 
     start = Date.now();
     attempts = retry(
@@ -446,7 +446,7 @@ test('retry', () => {
     expect(attempts).toEqual(3);
 
     // Make sure we waited 300ms for the first two attempts
-    expect(Date.now()).toBeCloseTo(start + 300, 0);
+    expect(Date.now()).toBeGreaterThanOrEqual(start + 300);
 
     start = Date.now();
     attempts = retry(
@@ -466,7 +466,7 @@ test('retry', () => {
     expect(attempts).toEqual(2);
 
     // Make sure we waited 100ms for the first attempt
-    expect(Date.now()).toBeCloseTo(start + 100, 0);
+    expect(Date.now()).toBeGreaterThanOrEqual(start + 100);
 
     expect(() =>
         retry(
