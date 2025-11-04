@@ -504,7 +504,7 @@ export class Collection<TKey extends number | string, TValue> {
      * Flip the items in the collection.
      */
     public flip(): Collection<string, TKey> {
-        return new Collection(array_flip(this.items)) as any;
+        return new Collection(array_flip(this.items as any)) as any;
     }
 
     /**

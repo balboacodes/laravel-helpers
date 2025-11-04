@@ -254,14 +254,14 @@ export class Arr {
             while (count(parts) > 1) {
                 const part = array_shift(parts);
 
-                if (isset((array as any)[part]) && Arr.accessible((array as any)[part])) {
-                    array = (array as any)[part];
+                if (isset((array as any)[part as string]) && Arr.accessible((array as any)[part as string])) {
+                    array = (array as any)[part as string];
                 } else {
                     continue keys;
                 }
             }
 
-            unset(array, array_shift(parts));
+            unset(array, array_shift(parts) as any);
         }
     }
 
@@ -446,7 +446,7 @@ export class Arr {
             return empty(array) ? (value(defaultValue) as TLastDefault) : (Object.values(array).pop() as TValue);
         }
 
-        return Arr.first(array_reverse(array, true), callback as (value: TValue, key: string) => boolean, defaultValue);
+        return Arr.first(array_reverse(array, true), callback, defaultValue);
     }
 
     /**

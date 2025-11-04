@@ -1,6 +1,6 @@
 {
     "name": "@balboacodes/laravel-helpers",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "A TypeScript port of Laravel's helpers",
     "keywords": [
         "laravel",
@@ -52,6 +52,6 @@
         "vitest": "^4.0.6"
     },
     "dependencies": {
-        "@balboacodes/php-utils": "^0.8.1"
+        "@balboacodes/php-utils": "^0.9.0"
     }
 }

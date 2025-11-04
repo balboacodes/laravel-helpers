@@ -207,9 +207,9 @@ export function data_set(
     const newTarget: Record<string, any> = {};
 
     if (segments.length > 0) {
-        newTarget[segment] = data_set(newTarget[segment], segments, value, overwrite);
+        newTarget[segment as string] = data_set(newTarget[segment as string], segments, value, overwrite);
     } else if (overwrite) {
-        newTarget[segment] = value;
+        newTarget[segment as string] = value;
     }
 
     return newTarget;
@@ -279,7 +279,7 @@ export function preg_replace_array(
         String(pattern),
         () => {
             for (const _ of Object.values(replacements)) {
-                return array_shift(replacements);
+                return array_shift(replacements) as string;
             }
 
             return '';

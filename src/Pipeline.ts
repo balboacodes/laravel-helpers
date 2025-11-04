@@ -1,6 +1,4 @@
-import { array_reverse } from '@balboacodes/php-utils';
-import { array_reduce } from '@balboacodes/php-utils';
-import { array_push } from '@balboacodes/php-utils';
+import { array_push, array_reduce, array_reverse } from '@balboacodes/php-utils';
 
 export class Pipeline {
     /**

@@ -400,7 +400,7 @@ export class Str {
 
         const collapsed = Str.replace(['-', '_', ' '], '_', parts.join('_'));
 
-        return array_filter(explode('_', collapsed as string)).join(' ');
+        return (array_filter(explode('_', collapsed as string)) as string[]).join(' ');
     }
 
     /**
@@ -873,7 +873,7 @@ export class Str {
      * Reverse the given string.
      */
     public static reverse(value: string): string {
-        return array_reverse(mb_str_split(value)).join('');
+        return (array_reverse(mb_str_split(value)) as string[]).join('');
     }
 
     /**
