@@ -25,10 +25,10 @@ export class Benchmark {
     /**
      * Measure a callable or array of callables over the given number of iterations.
      */
-    public static measure<TBenchmarks extends (() => any) | (() => any)[] | Record<string, () => any>>(
-        benchmarkables: TBenchmarks,
+    public static measure(
+        benchmarkables: Function | Function[] | Record<string, Function>,
         iterations: number = 1,
-    ): TBenchmarks extends () => any ? number : number[] | Record<string, number> {
+    ): number | number[] | Record<string, number> {
         return Collection.wrap(benchmarkables)
             .map((callback) => {
                 return Collection.range(1, iterations)

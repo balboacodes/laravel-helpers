@@ -119,7 +119,7 @@ export class Arr {
                 if (Arr.accessible(value) && !empty(value)) {
                     flatten(value, newKey + '.');
                 } else {
-                    (results as any)[newKey] = value;
+                    results[newKey] = value;
                 }
             }
         };
@@ -167,22 +167,22 @@ export class Arr {
     /**
      * Return the first element in an array passing a given truth test.
      */
-    public static first(
-        array: any[] | Record<string, any>,
-        callback?: (value: any, key: number | string) => boolean,
-        defaultValue?: any | (() => any),
-    ): any {
+    public static first<TKey extends number | string, TValue, TFirstDefault>(
+        array: TValue[] | Record<TKey, TValue>,
+        callback?: (value: TValue, key: TKey) => boolean,
+        defaultValue?: TFirstDefault | (() => TFirstDefault),
+    ): TValue | TFirstDefault {
         if (callback === undefined) {
             if (empty(array)) {
-                return value(defaultValue);
+                return value(defaultValue) as TFirstDefault;
             }
 
             return Object.values(array)[0];
         }
 
-        const key = array_find_key(array, callback);
+        const key = array_find_key(array, callback as (value: any, key: string | number) => boolean);
 
-        return key !== null ? (array as any)[key] : value(defaultValue);
+        return key !== null ? (array as any)[key] : (value(defaultValue) as TFirstDefault);
     }
 
     /**
@@ -192,7 +192,7 @@ export class Arr {
         array: any[] | Record<string, any>,
         depth: number = Number.MAX_SAFE_INTEGER,
     ): any[] | Record<string, any> {
-        const result: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+        const result = Array.isArray(array) ? [] : {};
         let key = 0;
 
         for (let item of Object.values(array)) {
@@ -268,9 +268,9 @@ export class Arr {
     /**
      * Get the underlying array of items from the given argument.
      *
-     * @throws {TypeError} if array cannot be created from items.
+     * @throws {TypeError} If array cannot be created from items.
      */
-    public static from(items: any): any[] {
+    public static from<TValue>(items: any): TValue[] {
         try {
             if (Arr.accessible(items)) {
                 return items;
@@ -437,16 +437,16 @@ export class Arr {
     /**
      * Return the last element in an array passing a given truth test.
      */
-    public static last(
-        array: any[] | Record<string, any>,
-        callback?: (value: any, key: number | string) => boolean,
-        defaultValue?: any | (() => any),
-    ): any {
+    public static last<TKey extends number | string, TValue, TLastDefault>(
+        array: TValue[] | Record<TKey, TValue>,
+        callback?: (value: TValue, key: TKey) => boolean,
+        defaultValue?: TLastDefault | (() => TLastDefault),
+    ): TValue | TLastDefault {
         if (callback === undefined) {
-            return empty(array) ? value(defaultValue) : Object.values(array).pop();
+            return empty(array) ? (value(defaultValue) as TLastDefault) : (Object.values(array).pop() as TValue);
         }
 
-        return Arr.first(array_reverse(array, true), callback, defaultValue);
+        return Arr.first(array_reverse(array, true), callback as (value: TValue, key: string) => boolean, defaultValue);
     }
 
     /**
@@ -471,10 +471,10 @@ export class Arr {
     /**
      * Run a map over each nested chunk of items.
      */
-    public static mapSpread(
-        array: any[] | Record<string, any>,
-        callback: (...chunk: any[]) => any,
-    ): any[] | Record<string, any> {
+    public static mapSpread<TKey extends number | string, TValue>(
+        array: any[] | Record<TKey, any>,
+        callback: (...chunk: any[]) => TValue,
+    ): TValue[] | Record<TKey, TValue> {
         return Arr.map(array, function (chunk: any[] | Record<string, any>, key?: number | string) {
             if (Array.isArray(chunk)) {
                 chunk.push(key);
@@ -483,7 +483,7 @@ export class Arr {
             }
 
             return callback(chunk, key);
-        });
+        }) as TValue[] | Record<TKey, TValue>;
     }
 
     /**
@@ -491,17 +491,17 @@ export class Arr {
      *
      * The callback should return an object with a single key: value pair.
      */
-    public static mapWithKeys(
-        array: any[] | Record<string, any>,
-        callback: (value: any, key?: number | string) => Record<string, any>,
-    ): Record<string, any> {
-        const result: Record<string, any> = {};
+    public static mapWithKeys<TKey extends number | string, TValue, TMapWithKeysKey extends string, TMapWithKeysValue>(
+        array: TValue[] | Record<TKey, TValue>,
+        callback: (value: TValue, key?: TKey) => Record<TMapWithKeysKey, TMapWithKeysValue>,
+    ): Record<TMapWithKeysKey, TMapWithKeysValue> {
+        const result = {} as Record<TMapWithKeysKey, TMapWithKeysValue>;
 
         for (const [key, value] of Object.entries(array)) {
-            const assoc = callback(value, key);
+            const assoc = callback(value, key as TKey);
 
             for (const [mapKey, mapValue] of Object.entries(assoc)) {
-                result[mapKey] = mapValue;
+                (result as any)[mapKey] = mapValue;
             }
         }
 
@@ -521,15 +521,15 @@ export class Arr {
     /**
      * Partition the array into two arrays using the given callback.
      */
-    public static partition(
-        array: any[] | Record<string, any>,
-        callback: (value: any, key: number | string) => boolean,
-    ): (any[] | Record<string, any>)[] {
-        const passed: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
-        const failed: any[] | Record<string, any> = Array.isArray(array) ? [] : {};
+    public static partition<TKey extends number | string, TValue>(
+        array: TValue[] | Record<TKey, TValue>,
+        callback: (value: TValue, key: TKey) => boolean,
+    ): [TValue[] | Record<TKey, TValue>, TValue[] | Record<TKey, TValue>] {
+        const passed = Array.isArray(array) ? [] : {};
+        const failed = Array.isArray(array) ? [] : {};
 
         Object.entries(array).forEach(([key, item]) => {
-            if (callback(item, key)) {
+            if (callback(item, key as TKey)) {
                 if (Array.isArray(passed)) {
                     passed.push(item);
                 } else {
@@ -544,7 +544,7 @@ export class Arr {
             }
         });
 
-        return [passed, failed];
+        return [passed as TValue[] | Record<TKey, TValue>, failed as TValue[] | Record<TKey, TValue>];
     }
 
     /**
@@ -653,7 +653,7 @@ export class Arr {
         keys = Arr.wrap(keys);
 
         return Arr.map(array, (item) => {
-            let result: any[] | Record<string, any> = Array.isArray(item) ? [] : {};
+            let result = Array.isArray(item) ? [] : {};
 
             for (const key of keys) {
                 if (Arr.accessible(item) && Arr.exists(item, key)) {

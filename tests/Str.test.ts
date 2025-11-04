@@ -2,15 +2,17 @@ import { base64_encode } from '@balboacodes/php-utils';
 import { expect, test } from 'vitest';
 import { Str } from '../src/Str';
 
-test.each([
-    ['hannah', 'han', 'nah'],
-    ['hannah', 'n', 'nah'],
-    ['ééé hannah', 'han', 'nah'],
-    ['hannah', 'xxxx', 'hannah'],
-    ['hannah', '', 'hannah'],
-    ['han0nah', '0', 'nah'],
-])('after(%s, %s) => %s', (subject: string, search: string, expected: string) => {
-    expect(Str.after(subject, search)).toBe(expected);
+test('after', () => {
+    [
+        ['hannah', 'han', 'nah'],
+        ['hannah', 'n', 'nah'],
+        ['ééé hannah', 'han', 'nah'],
+        ['hannah', 'xxxx', 'hannah'],
+        ['hannah', '', 'hannah'],
+        ['han0nah', '0', 'nah'],
+    ].forEach(([subject, search, expected]) => {
+        expect(Str.after(subject, search)).toBe(expected);
+    });
 });
 
 test('afterLast', () => {

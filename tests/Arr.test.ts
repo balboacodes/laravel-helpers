@@ -600,7 +600,7 @@ test('mapSpread', () => {
 });
 
 test('mapWithKeys', () => {
-    let data: any = [
+    const data = [
         { name: 'Blastoise', type: 'Water', idx: 9 },
         { name: 'Charmander', type: 'Fire', idx: 4 },
         { name: 'Dragonair', type: 'Dragon', idx: 148 },

@@ -1,14 +1,6 @@
+// prettier-ignore
 import {
-    array_key_first,
-    array_key_last,
-    array_shift,
-    count,
-    empty,
-    ENT_QUOTES,
-    explode,
-    htmlspecialchars,
-    in_array,
-    preg_replace_callback,
+    array_key_first, array_key_last, array_shift, count, empty, ENT_QUOTES, explode, htmlspecialchars, in_array, preg_replace_callback,
 } from '@balboacodes/php-utils';
 import { Arr } from './Arr';
 import { Collection } from './Collection';
@@ -267,6 +259,15 @@ export function now(): Date {
 }
 
 /**
+ * Return the given value, optionally passed through the given callback.
+ *
+ * @alias Laravel's `with()`
+ */
+export function pass<TValue, TReturn>(value: TValue, callback?: (value: TValue) => TReturn): TValue | TReturn {
+    return callback === undefined ? value : callback(value);
+}
+
+/**
  * Replace a given pattern with each value in the array in sequentially.
  */
 export function preg_replace_array(
@@ -434,13 +435,4 @@ export function when(condition: any, whenTrue: Function | any, defaultValue?: Fu
     }
 
     return value(defaultValue, condition);
-}
-
-/**
- * Return the given value, optionally passed through the given callback.
- *
- * @alias Laravel's `with()`
- */
-export function pass<TValue, TReturn>(value: TValue, callback?: (value: TValue) => TReturn): TValue | TReturn {
-    return callback === undefined ? value : callback(value);
 }

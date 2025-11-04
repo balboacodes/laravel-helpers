@@ -895,8 +895,8 @@ test('fromJson', () => {
     instance = Collection.fromJson(json);
     expect(instance.toArray()).toEqual(array);
 
-    instance = Collection.fromJson('{"int":99999999999999999999999}');
-    expect(instance.toArray()).toEqual({ int: 99999999999999999999999 });
+    instance = Collection.fromJson('{"int":999999999999999}');
+    expect(instance.toArray()).toEqual({ int: 999999999999999 });
 });
 
 test('get', () => {

@@ -17,7 +17,7 @@ export class Collection<TKey extends number | string, TValue> {
      * Create a new collection.
      */
     public constructor(items: Enumerable<TKey, TValue> = []) {
-        this.items = this.getArrayableItems(items) as any;
+        this.items = this.getArrayableItems(items) as TValue[] | Record<TKey, TValue>;
     }
 
     /**
