@@ -38,6 +38,8 @@ const flattened = Arr.dot(object);
 
 ### Collections
 
+The Collection class provides a fluent, convenient wrapper for working with arrays or objects of data.
+
 ```ts
 import { collect } from '@balboacodes/laravel-helpers';
 
@@ -107,6 +109,8 @@ throw_if(false, new Error());
 
 #### Benchmarking
 
+Utilize the Benchmark class to measure the number of milliseconds it takes for the given functions to complete.
+
 ```ts
 import { Benchmark } from '@balboacodes/laravel-helpers';
 
@@ -124,6 +128,8 @@ const benchmarks = Benchmark.measure({
 
 #### Lottery
 
+The Lottery class may be used to execute callbacks based on a set of given odds.
+
 ```ts
 import { Lottery } from '@balboacodes/laravel-helpers';
 
@@ -134,6 +140,8 @@ Lottery.odds(1, 20)
 ```
 
 #### Pipeline
+
+The Pipeline class provides a convenient way to "pipe" a given input through a series of object instances or functions, giving each the opportunity to inspect or modify the input and invoke the next callable in the pipeline.
 
 ```ts
 import { Pipeline } from '@balboacodes/laravel-helpers';
@@ -155,6 +163,18 @@ const result = new Pipeline()
     .then((user: User) => user);
 ```
 
+#### Timebox
+
+The Timebox class ensures that the given callback always takes a fixed amount of time to execute, even if its actual execution completes sooner.
+
+```ts
+import { Timebox } from '@balboacodes/laravel-helpers';
+
+(new Timebox).call((timebox) => {
+    // ...
+}, 10);
+```
+
 ## Documentation
 
 The documentaion for all of the helpers can be found on Laravel's documentation pages. All you have to do is convert the syntax to JS. Here are the relevant pages to look at:
@@ -167,6 +187,7 @@ The documentaion for all of the helpers can be found on Laravel's documentation 
 - [Benchmarking](https://laravel.com/docs/12.x/helpers#benchmarking)
 - [Lottery](https://laravel.com/docs/12.x/helpers#lottery)
 - [Pipeline](https://laravel.com/docs/12.x/helpers#pipeline)
+- [Timebox](https://laravel.com/docs/12.x/helpers#timebox)
 
 ## Related
 
