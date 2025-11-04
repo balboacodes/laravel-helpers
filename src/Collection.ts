@@ -1,12 +1,17 @@
 // prettier-ignore
 import {
-  array_all, array_any, array_chunk, array_combine, array_diff, array_diff_assoc, array_diff_key, array_diff_uassoc, array_filter, array_find_key, array_flip, array_intersect, array_intersect_assoc, array_intersect_key, array_intersect_uassoc, array_keys, array_map, array_merge, array_merge_recursive, array_pad, array_pop, array_push, array_replace, array_replace_recursive, array_reverse, array_search, array_shift, array_slice, array_splice, array_uintersect, array_unique, arsort, asort, count, empty, in_array, intval, isset, krsort, ksort, range, SORT_FLAG_CASE, SORT_LOCALE_STRING, SORT_NATURAL, SORT_NUMERIC, SORT_REGULAR, SORT_STRING, strcasecmp, strcmp, strcoll, strnatcasecmp, strnatcmp, uasort, uksort, unset,
+    array_all, array_any, array_chunk, array_combine, array_diff, array_diff_assoc, array_diff_key, array_diff_uassoc, array_filter, array_find_key, array_flip, array_intersect, array_intersect_assoc, array_intersect_key, array_intersect_uassoc, array_keys, array_map, array_merge, array_merge_recursive, array_pad, array_pop, array_push, array_replace, array_replace_recursive, array_reverse, array_search, array_shift, array_slice, array_splice, array_uintersect, array_unique, arsort, asort, count, empty, in_array, intval, isset, krsort, ksort, range, SORT_FLAG_CASE, SORT_LOCALE_STRING, SORT_NATURAL, SORT_NUMERIC, SORT_REGULAR, SORT_STRING, strcasecmp, strcmp, strcoll, strnatcasecmp, strnatcmp, uasort, uksort, unset,
 } from '@balboacodes/php-utils';
 import { Arr } from './Arr';
+import { Conditionable } from './Concerns/Conditionable';
+import { use } from './Concerns/decorator';
 import { data_get, data_has, value } from './helpers';
 
 type Enumerable<TKey extends number | string, TValue> = TValue[] | Record<TKey, TValue> | Collection<TKey, TValue>;
 
+export interface Collection<TKey extends number | string, TValue> extends Conditionable {}
+
+@use(Conditionable)
 export class Collection<TKey extends number | string, TValue> {
     /**
      * The items contained in the collection.
@@ -1639,25 +1644,6 @@ export class Collection<TKey extends number | string, TValue> {
     }
 
     /**
-     * Apply the callback if the given "value" is (or resolves to) falsy.
-     */
-    public unless<TUnlessParameter, TUnlessReturnType>(
-        value: ((instance: this) => TUnlessParameter) | TUnlessParameter,
-        callback: (instance: this, value: TUnlessParameter) => TUnlessReturnType,
-        defaultValue?: (instance: this, value: TUnlessParameter) => TUnlessReturnType,
-    ): this | TUnlessReturnType {
-        value = typeof value === 'function' ? (value as Function)(this) : value;
-
-        if (!value) {
-            return callback(this, value as TUnlessParameter) ?? this;
-        } else if (defaultValue) {
-            return defaultValue(this, value as TUnlessParameter) ?? this;
-        }
-
-        return this;
-    }
-
-    /**
      * Apply the callback unless the collection is empty.
      */
     public unlessEmpty<TUnlessEmptyReturnType>(
@@ -1707,29 +1693,6 @@ export class Collection<TKey extends number | string, TValue> {
         }
 
         return new Collection({ ...Object.values(this.items) }) as any;
-    }
-
-    /**
-     * Apply the callback if the given "value" is (or resolves to) truthy.
-     */
-    public when<TWhenParameter, TWhenReturnType>(
-        when?: ((instance: this) => TWhenParameter) | TWhenParameter,
-        callback?: (instance: this, when: TWhenParameter) => TWhenReturnType,
-        defaultValue?: (instance: this, when: TWhenParameter) => TWhenReturnType,
-    ): this | TWhenReturnType {
-        when = typeof when === 'function' ? (when as Function)(this) : when;
-
-        if (arguments.length === 0) {
-            return this;
-        }
-
-        if (when) {
-            return callback?.(this, when as any) ?? this;
-        } else if (defaultValue) {
-            return defaultValue(this, when as any) ?? this;
-        }
-
-        return this;
     }
 
     /**

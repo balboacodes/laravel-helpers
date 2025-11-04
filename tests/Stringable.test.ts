@@ -109,12 +109,14 @@ test('test', () => {
 });
 
 test('when', () => {
-    expect(new Stringable('when').when(false, (self, val) => self.append(val).append('false')).toString()).toBe('when');
+    expect(new Stringable('when').when(false, (self, val) => self.append(String(val)).append('false')).toString()).toBe(
+        'when',
+    );
     expect(
         new Stringable('when false ')
             .when(
                 false,
-                (self, val) => self.append(val),
+                (self, val) => self.append(String(val)),
                 (self) => self.append('fallbacks to default'),
             )
             .toString(),
@@ -450,7 +452,7 @@ test('unless', () => {
         new Stringable('unless')
             .unless(
                 true,
-                (self, val) => self.append(val),
+                (self, val) => self.append(String(val)),
                 (self) => self.append(' true fallbacks to default'),
             )
             .toString(),
@@ -458,25 +460,25 @@ test('unless', () => {
 });
 
 test('unless', () => {
-    expect(new Stringable('unless').unless(1, (self, val) => self.append(val).append('true')).toString()).toBe(
+    expect(new Stringable('unless').unless(1, (self, val) => self.append(String(val)).append('true')).toString()).toBe(
         'unless',
     );
     expect(
         new Stringable('unless true ')
             .unless(
                 1,
-                (self, val) => self.append(val),
-                (self, val) => self.append('fallbacks to default with value ').append(val),
+                (self, val) => self.append(String(val)),
+                (self, val) => self.append('fallbacks to default with value ').append(String(val)),
             )
             .toString(),
     ).toBe('unless true fallbacks to default with value 1');
 
-    expect(new Stringable('unless ').unless(0, (self, val) => self.append(val)).toString()).toBe('unless 0');
+    expect(new Stringable('unless ').unless(0, (self, val) => self.append(String(val))).toString()).toBe('unless 0');
     expect(
         new Stringable('gets the value ')
             .unless(
                 0,
-                (self, val) => self.append(val),
+                (self, val) => self.append(String(val)),
                 (self) => self.append('fallbacks to default'),
             )
             .toString(),

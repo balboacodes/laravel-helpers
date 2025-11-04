@@ -2,8 +2,13 @@
 import {
     basename, dirname, explode, FILTER_VALIDATE_INT, filter_var, hash, mb_str_split, preg_split, sscanf, strip_tags,
 } from '@balboacodes/php-utils';
+import { Conditionable } from './Concerns/Conditionable';
+import { use } from './Concerns/decorator';
 import { Str } from './Str';
 
+export interface Stringable extends Conditionable {}
+
+@use(Conditionable)
 export class Stringable {
     /**
      * The underlying string value.
@@ -595,6 +600,13 @@ export class Stringable {
     }
 
     /**
+     * Unwrap the string with the given strings.
+     */
+    public unwrap(before: string, after?: string): Stringable {
+        return new Stringable(Str.unwrap(this.value, before, after));
+    }
+
+    /**
      * Convert the given string to upper-case.
      */
     public upper(): Stringable {
@@ -627,25 +639,6 @@ export class Stringable {
      */
     public wrap(before: string, after?: string): Stringable {
         return new Stringable(Str.wrap(this.value, before, after));
-    }
-
-    /**
-     * Apply the callback if the given "value" is (or resolves to) truthy.
-     */
-    public when(
-        value?: ((self: Stringable) => any) | any,
-        callback?: (self: Stringable, val: any) => Stringable,
-        defaultCallback?: (self: Stringable, val: any) => Stringable,
-    ): Stringable {
-        const resolved = typeof value === 'function' ? value(this) : value;
-
-        if (resolved) {
-            return callback?.(this, resolved) ?? this;
-        } else if (defaultCallback) {
-            return defaultCallback(this, resolved) ?? this;
-        }
-
-        return this;
     }
 
     /**
@@ -776,31 +769,5 @@ export class Stringable {
         defaultCallback?: (self: Stringable, val: any) => Stringable,
     ): Stringable {
         return this.when(this.test(pattern), callback, defaultCallback);
-    }
-
-    /**
-     * Apply the callback if the given "value" is (or resolves to) falsy.
-     */
-    public unless(
-        value?: ((self: Stringable) => any) | any,
-        callback?: (self: Stringable, val: any) => Stringable,
-        defaultCallback?: (self: Stringable, val: any) => Stringable,
-    ): Stringable {
-        const resolved = typeof value === 'function' ? value(this) : value;
-
-        if (!resolved) {
-            return callback?.(this, resolved) ?? this;
-        } else if (defaultCallback) {
-            return defaultCallback(this, resolved) ?? this;
-        }
-
-        return this;
-    }
-
-    /**
-     * Unwrap the string with the given strings.
-     */
-    public unwrap(before: string, after?: string): Stringable {
-        return new Stringable(Str.unwrap(this.value, before, after));
     }
 }
