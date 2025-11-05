@@ -1,6 +1,6 @@
 import { array_push, array_reduce, array_reverse } from '@balboacodes/php-utils';
-import { Conditionable } from './Concerns/Conditionable';
-import { use } from './Concerns/decorator';
+import { use } from './decorators/use';
+import { Conditionable } from './traits/Conditionable';
 
 export interface Pipeline extends Conditionable {}
 

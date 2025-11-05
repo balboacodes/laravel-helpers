@@ -3,9 +3,9 @@ import {
     array_all, array_any, array_chunk, array_combine, array_diff, array_diff_assoc, array_diff_key, array_diff_uassoc, array_filter, array_find_key, array_flip, array_intersect, array_intersect_assoc, array_intersect_key, array_intersect_uassoc, array_keys, array_map, array_merge, array_merge_recursive, array_pad, array_pop, array_push, array_replace, array_replace_recursive, array_reverse, array_search, array_shift, array_slice, array_splice, array_uintersect, array_unique, arsort, asort, count, empty, in_array, intval, isset, krsort, ksort, range, SORT_FLAG_CASE, SORT_LOCALE_STRING, SORT_NATURAL, SORT_NUMERIC, SORT_REGULAR, SORT_STRING, strcasecmp, strcmp, strcoll, strnatcasecmp, strnatcmp, uasort, uksort, unset,
 } from '@balboacodes/php-utils';
 import { Arr } from './Arr';
-import { Conditionable } from './Concerns/Conditionable';
-import { use } from './Concerns/decorator';
+import { use } from './decorators/use';
 import { data_get, data_has, value } from './helpers';
+import { Conditionable } from './traits/Conditionable';
 
 type Enumerable<TKey extends number | string, TValue> = TValue[] | Record<TKey, TValue> | Collection<TKey, TValue>;
 
